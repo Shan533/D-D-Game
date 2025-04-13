@@ -13,7 +13,10 @@ DD/
 ├── .env.local                     # Environment variables (git-ignored)
 ├── .env.local.example             # Example environment variables
 ├── .gitignore                     # Git ignore file
-├── design.md                      # Design documentation
+├── docs/                          # Documentation files
+│   ├── design.md                  # Design documentation
+│   ├── db-setup.md                # Database setup instructions
+│   └── file_structure.md          # This file structure document
 ├── supabase/                      # Supabase configuration and migrations
 │   └── migrations/                # Database migrations
 ├── public/                        # Static assets
@@ -26,37 +29,22 @@ DD/
 │   │   ├── globals.css            # Global CSS
 │   │   ├── favicon.ico            # Site favicon
 │   │   ├── error/                 # Error handling
-│   │   │   └── page.tsx
 │   │   ├── auth/                  # Auth routes
-│   │   │   └── page.tsx
 │   │   ├── auth-status/           # Auth status component
-│   │   │   └── page.tsx
 │   │   ├── login/                 # Login page
-│   │   │   └── page.tsx
 │   │   ├── register/              # Registration page
-│   │   │   └── page.tsx
 │   │   ├── game/                  # Main game pages
-│   │   │   ├── page.tsx           # Template selection
 │   │   │   ├── create/            # Character creation
-│   │   │   │   └── page.tsx
 │   │   │   ├── play/              # Active gameplay
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── [sessionId]/
-│   │   │   │       └── page.tsx
+│   │   │   │   └── [sessionId]/   # Session-specific gameplay
 │   │   │   └── history/           # Game history
-│   │   │       └── page.tsx
 │   │   └── api/                   # API routes
 │   │       ├── auth/              # Auth related endpoints
-│   │       │   └── route.ts
 │   │       ├── ai/                # AI integration endpoints
-│   │       │   └── route.ts
-│   │       └── game/              # Game related endpoints (to be implemented)
-│   │           ├── session/
-│   │           │   └── route.ts
-│   │           ├── action/
-│   │           │   └── route.ts
-│   │           └── save/
-│   │               └── route.ts
+│   │       └── game/              # Game related endpoints
+│   │           ├── session/       # Session management
+│   │           ├── action/        # Game actions
+│   │           └── save/          # Save game state
 │   ├── components/                # UI components
 │   │   ├── ui/                    # Base UI components
 │   │   │   ├── Button.tsx
@@ -77,9 +65,7 @@ DD/
 │   ├── lib/                       # Utility functions and helpers
 │   │   ├── utils.ts               # General utilities
 │   │   ├── supabase/              # Supabase client
-│   │   │   └── client.ts
 │   │   ├── openai/                # OpenAI client
-│   │   │   └── client.ts
 │   │   └── game/                  # Game logic
 │   │       ├── dice.ts            # Dice mechanics
 │   │       ├── state-manager.ts   # Game state management
@@ -89,17 +75,17 @@ DD/
 │   │   └── supabase/              # Supabase utilities
 │   ├── middleware.ts              # Next.js middleware for auth
 │   ├── templates/                 # Game templates (JSON format)
-│   │   ├── helicopter-parent.json # "Asian Helicopter Parenting" scenario
-│   │   ├── white-house.json       # "White House Chaos" scenario
-│   │   └── pirate-adventure.json  # "Pirate Adventure" scenario
+│   │   ├── helicopter-parent.json # Helicopter parent scenario
+│   │   ├── white-house.json       # White House scenario
+│   │   └── template-structure.md  # Template format documentation
 │   ├── types/                     # TypeScript type definitions
 │   │   ├── auth.ts                # Auth-related types
 │   │   ├── game.ts                # Game data structures
 │   │   ├── template.ts            # Game template interfaces
 │   │   └── supabase.ts            # Database schema types
 │   └── context/                   # React Context providers
-│       ├── AuthContext.tsx        # Authentication context (large file ~30KB)
-│       └── GameContext.tsx        # Game state context (large file ~15KB)
+│       ├── AuthContext.tsx        # Authentication context
+│       └── GameContext.tsx        # Game state context
 ```
 
 ## Key Directory Explanations

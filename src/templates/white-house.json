@@ -1,108 +1,146 @@
 {
   "metadata": {
     "id": "white-house",
-    "name": "White House Chaos",
-    "description": "You're a senior advisor to an unpredictable US President. Navigate the chaotic political environment while trying to implement policy and manage crises.",
+    "name": "White House Chaos: Trump's Advisor",
+    "description": "You are Trump's advisor, trying to make him the best president the universe has ever seen (Parody).",
     "imageUrl": null
   },
-  "scenario": "Political Chaos in the White House",
-  "startingPoint": "It's your first week as a senior advisor to the President. A controversial tweet has just gone viral, foreign leaders are demanding clarification, and the press is hammering the communications team. The Chief of Staff has summoned you to a crisis meeting.",
+  "scenario": "White House Chaos: Trump's Advisor",
+  "startingPoint": "Your first day in the chaotic White House. The President just fired your predecessor via tweet while you were being security-screened. He's already called you by three different names and asked if you can 'do something about those tariff people.' Intelligence briefings are piling up unread, and CNN is reporting a possible missile test in North Korea. The President wants McDonald's for lunch and someone to explain why his approval rating isn't 100%.",
   "attributes": {
-    "diplomacy": "Diplomacy",
-    "media_savvy": "Media Savvy",
-    "policy_expertise": "Policy Expertise",
-    "loyalty": "Loyalty",
-    "ethics": "Ethics"
+    "spin": "Ability to manipulate information, craft alternative narratives, and control public perception during scandals and controversies.",
+    "patience": "Mental fortitude to endure presidential tantrums, 3AM tweet storms, and absurd demands without having a nervous breakdown.",
+    "cunning": "Political savvy to navigate Washington power games, outsmart rivals, and implement your agenda while no one's looking.",
+    "flattery": "Skill at ego management, delivering perfectly-timed compliments, and maintaining favor with the narcissist-in-chief.",
+    "crisis_management": "Talent for handling emergencies, from nuclear threats to covfefe tweets, often simultaneously and with minimal preparation.",
+    "media_savvy": "Understanding of press dynamics, social media algorithms, and how to turn 'fake news' accusations to your advantage."
   },
   "baseSkills": {
-    "press_management": {
-      "name": "Press Management",
-      "description": "Control the media narrative",
+    "alternative_facts": {
+      "name": "Alternative Facts",
+      "description": "Create believable falsehoods or reshape reality to serve the administration's narrative and distract from actual problems.",
+      "attributeKey": "spin"
+    },
+    "damage_control": {
+      "name": "Damage Control",
+      "description": "Minimize fallout from presidential gaffes, scandals, or 3AM tweets that threatened nuclear war or crashed the stock market.",
+      "attributeKey": "spin"
+    },
+    "tantrum_management": {
+      "name": "Tantrum Management",
+      "description": "Calm presidential rage episodes by offering Diet Coke, compliments, or a new enemy to focus on.",
+      "attributeKey": "patience"
+    },
+    "sleep_deprivation": {
+      "name": "Sleep Deprivation",
+      "description": "Function effectively despite being awakened at all hours for urgent matters like bad TV coverage or burger cravings.",
+      "attributeKey": "patience"
+    },
+    "bureaucratic_maneuvering": {
+      "name": "Bureaucratic Maneuvering",
+      "description": "Navigate complex White House power dynamics and ensure your rivals get blamed for failures while you claim credit for successes.",
+      "attributeKey": "cunning"
+    },
+    "leak_prevention": {
+      "name": "Leak Prevention",
+      "description": "Keep embarrassing information from reaching the press or identify which colleague to frame when leaks inevitably happen.",
+      "attributeKey": "cunning"
+    },
+    "ego_massage": {
+      "name": "Ego Massage",
+      "description": "Provide validation and praise to maintain presidential confidence and secure your position in the inner circle.",
+      "attributeKey": "flattery"
+    },
+    "loyalty_signaling": {
+      "name": "Loyalty Signaling",
+      "description": "Demonstrate unwavering support publicly, even when defending policies that contradict statements from 10 minutes ago.",
+      "attributeKey": "flattery"
+    },
+    "distraction_creation": {
+      "name": "Distraction Creation",
+      "description": "Generate new outrageous headlines to divert attention from ongoing scandals, investigations, or policy failures.",
+      "attributeKey": "crisis_management"
+    },
+    "nuclear_de_escalation": {
+      "name": "Nuclear De-escalation",
+      "description": "Talk the president down from extreme military options by appealing to ratings, legacy concerns, or golf schedule conflicts.",
+      "attributeKey": "crisis_management"
+    },
+    "twitter_translation": {
+      "name": "Twitter Translation",
+      "description": "Interpret and explain presidential social media outbursts to confused allies, enemies, and markets without revealing your own confusion.",
       "attributeKey": "media_savvy"
     },
-    "policy_analysis": {
-      "name": "Policy Analysis",
-      "description": "Provide expert insight on policy implications",
-      "attributeKey": "policy_expertise"
-    },
-    "diplomatic_negotiation": {
-      "name": "Diplomatic Negotiation",
-      "description": "Smooth tensions with foreign or domestic officials",
-      "attributeKey": "diplomacy"
-    },
-    "political_maneuvering": {
-      "name": "Political Maneuvering",
-      "description": "Navigate internal White House politics",
-      "attributeKey": "loyalty"
-    },
-    "whistle_blowing": {
-      "name": "Whistle Blowing",
-      "description": "Report unethical behavior through proper channels",
-      "attributeKey": "ethics"
+    "press_wrangling": {
+      "name": "Press Wrangling",
+      "description": "Manage hostile reporters, dodge questions, and turn briefings into propaganda opportunities regardless of the day's chaos.",
+      "attributeKey": "media_savvy"
     }
   },
   "playerCustomizations": {
-    "background": {
-      "name": "Professional Background",
-      "description": "What was your career before this role?",
+    "role": {
+      "name": "Role",
+      "description": "Choose your role in the Trump administration",
       "options": [
-        "Career Politician",
-        "Business Executive",
-        "Media Personality",
-        "Academic Expert"
+        "Chief of Staff",
+        "Press Secretary",
+        "National Security Advisor",
+        "Family Member/Advisor",
+        "Cabinet Secretary"
       ],
       "impact": {
-        "Career Politician": {
-          "diplomacy": 2,
-          "loyalty": 2,
-          "ethics": -1
+        "Chief of Staff": {
+          "crisis_management": 2,
+          "patience": 1
         },
-        "Business Executive": {
-          "policy_expertise": 1,
-          "loyalty": 1,
+        "Press Secretary": {
+          "spin": 2,
           "media_savvy": 1
         },
-        "Media Personality": {
-          "media_savvy": 3,
-          "diplomacy": 1,
-          "policy_expertise": -1
+        "National Security Advisor": {
+          "crisis_management": 2,
+          "cunning": 1
         },
-        "Academic Expert": {
-          "policy_expertise": 3,
-          "ethics": 1,
-          "media_savvy": -1
+        "Family Member/Advisor": {
+          "flattery": 2,
+          "cunning": 1
+        },
+        "Cabinet Secretary": {
+          "cunning": 2,
+          "spin": 1
         }
       }
     },
-    "motivation": {
-      "name": "Personal Motivation",
-      "description": "Why did you take this job?",
+    "background": {
+      "name": "Background",
+      "description": "Choose your pre-White House background",
       "options": [
-        "Political Ambition",
-        "Policy Implementation",
-        "Patriotic Duty",
-        "Personal Fame"
+        "Business Executive",
+        "Political Operative",
+        "Military Veteran",
+        "TV Personality",
+        "Campaign Loyalist"
       ],
       "impact": {
-        "Political Ambition": {
-          "loyalty": 2,
-          "media_savvy": 1,
-          "ethics": -1
+        "Business Executive": {
+          "flattery": 2,
+          "crisis_management": 1
         },
-        "Policy Implementation": {
-          "policy_expertise": 2,
-          "ethics": 1,
-          "media_savvy": 0
+        "Political Operative": {
+          "cunning": 2,
+          "spin": 1
         },
-        "Patriotic Duty": {
-          "ethics": 2,
-          "loyalty": 1,
-          "media_savvy": 0
+        "Military Veteran": {
+          "patience": 2,
+          "crisis_management": 1
         },
-        "Personal Fame": {
+        "TV Personality": {
           "media_savvy": 2,
-          "diplomacy": 1,
-          "ethics": -1
+          "spin": 1
+        },
+        "Campaign Loyalist": {
+          "flattery": 2,
+          "patience": 1
         }
       }
     }
@@ -110,26 +148,34 @@
   "npcs": {
     "administration": [
       {
-        "name": "President",
-        "description": "Impulsive, media-obsessed, and unpredictable, but with remarkable political instincts."
+        "name": "President Trump",
+        "description": "Impulsive, media-obsessed, and unpredictable, with a preference for fast food, cable news, and Twitter diplomacy."
       },
       {
         "name": "Chief of Staff",
-        "description": "Practical, overworked, and trying to maintain some semblance of order."
+        "description": "Constantly trying to prevent presidential impulses from becoming international incidents while looking for a dignified exit strategy."
       },
       {
         "name": "Communications Director",
-        "description": "Constantly in damage control mode with a strained relationship with the press."
+        "description": "Cycled through every 3-6 weeks, permanently exhausted and developing a facial tic from explaining unexplainable tweets."
+      },
+      {
+        "name": "Family Members",
+        "description": "Various relatives with ambiguous roles and security clearances, immune to traditional ethics rules and organizational structures."
       }
     ],
     "external": [
       {
         "name": "Press Corps",
-        "description": "Eager for stories and constantly challenging the administration's narrative."
+        "description": "Constantly bombarded with 'fake news' accusations while trying to keep up with policy reversals that happen mid-press conference."
       },
       {
-        "name": "Opposition Leader",
-        "description": "Looking for any opportunity to criticize the administration."
+        "name": "Congressional Leaders",
+        "description": "Alternating between public support and private panic, depending on the latest presidential outburst and polling data."
+      },
+      {
+        "name": "Foreign Leaders",
+        "description": "Confused diplomats trying to determine if presidential tweets constitute official foreign policy or late-night fast food reactions."
       }
     ]
   }

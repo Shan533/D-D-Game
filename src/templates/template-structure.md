@@ -1,0 +1,118 @@
+# Game Template Structure
+
+This document outlines the structure and requirements for game templates in the D&D-style interactive game.
+
+## Overview
+
+Templates define the game world, characters, attributes, skills, and customization options. Each template is stored as a JSON file in the `/src/templates/` directory.
+
+## Required Fields
+
+### Metadata
+
+```
+"metadata": {
+  "id": "unique-template-id",
+  "name": "Display Name",
+  "description": "Brief description of the scenario",
+  "imageUrl": "path/to/image.jpg" // Optional
+}
+```
+
+### Core Elements
+
+```
+"scenario": "Short scenario name/title",
+"startingPoint": "Description of the initial game state",
+```
+
+### Attributes
+
+Define character attributes that affect gameplay:
+
+```
+"attributes": {
+  "attribute_key": "Description of what this attribute means",
+  // Additional attributes...
+}
+```
+
+### Skills
+
+Define skills that can be used in gameplay:
+
+```
+"baseSkills": {
+  "skill_key": {
+    "name": "Display Name",
+    "description": "What this skill does",
+    "attributeKey": "attribute_key" // References an attribute defined above
+  },
+  // Additional skills...
+}
+```
+
+### Player Customizations
+
+Define options for character customization:
+
+```
+"playerCustomizations": {
+  "category_key": {
+    "name": "Category Name",
+    "description": "Explanation of this customization category",
+    "options": [
+      "Option 1",
+      "Option 2",
+      // Additional options...
+    ],
+    "impact": {
+      "Option 1": {
+        "attribute_key": 2, // Positive or negative impact on attributes
+        "another_attribute": -1
+      },
+      // Impact for other options...
+    }
+  },
+  // Additional customization categories...
+}
+```
+
+### NPCs (Optional)
+
+Define non-player characters in the game world:
+
+```
+"npcs": {
+  "category": [
+    {
+      "name": "NPC Name",
+      "description": "Description of this character"
+    },
+    // Additional NPCs...
+  ]
+}
+```
+
+## Example
+
+See existing templates like `helicopter-parent.json` or `white-house.json` for complete examples.
+
+## Best Practices
+
+1. Keep descriptions concise but informative
+2. Ensure all attributeKey references in skills match defined attributes
+3. Balance attribute impacts in customizations
+4. Use lowercase with underscores for all keys (except in the metadata section)
+5. Include a variety of skills that cover different play styles
+6. Test the template with different player choices to ensure balanced gameplay
+
+## Advanced Features (Optional)
+
+Templates can also include:
+- Special events
+- Location-specific content
+- Achievement systems
+- Relationship mechanics
+
+Refer to the game design documentation for details on implementing these features. 

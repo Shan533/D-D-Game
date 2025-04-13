@@ -25,6 +25,7 @@ Detailed documentation about the project is available in the [docs](/docs) direc
 - [Design Document](/docs/design.md) - Project overview, architecture, and feature descriptions
 - [Database Setup](/docs/db-setup.md) - Guide for setting up the Supabase database
 - [File Structure](/docs/file_structure.md) - Overview of the codebase organization
+- [Template Structure](/src/templates/template-structure.md) - Documentation for creating game templates
 
 ## Getting Started
 

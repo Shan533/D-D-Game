@@ -11,7 +11,7 @@ export const loadTemplateMetadata = async (): Promise<TemplateMetadata[]> => {
   try {
     // In a production app, we'd fetch this from an API or database
     // For now, we'll load from our JSON files in src/templates
-    const templateIds = ['helicopter-parent', 'white-house', 'pirate-adventure'];
+    const templateIds = ['helicopter-parent', 'white-house'];
     const templates: TemplateMetadata[] = [];
     
     for (const id of templateIds) {

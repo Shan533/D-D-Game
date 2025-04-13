@@ -1,18 +1,24 @@
 {
   "metadata": {
     "id": "helicopter-parent",
-    "name": "Asian Helicopter Parenting",
+    "name": "Raising Your Asian Child (Helicopter Parent Edition)",
     "description": "Experience the pressure of having demanding Asian parents with high expectations for your academic success.",
     "imageUrl": null
   },
-  "scenario": "Life with Helicopter Parents",
-  "startingPoint": "You've just received your report card with a B+ grade in mathematics. Your parents have called you into the living room for a 'chat'. They're expecting you to become a doctor, and anything less than straight As is simply unacceptable.",
+  "scenario": "Raising Your Asian Child (Helicopter Parent Edition): You are parenting your asian kid to be the best student ever! (or not)",
+  "startingPoint": "First Parent-Teacher Conference of the School Year",
   "attributes": {
     "intelligence": "Intelligence",
     "creativity": "Creativity",
     "conformity": "Conformity",
     "rebellion": "Rebellion",
-    "stress": "Stress"
+    "stress": "Stress",
+    "academic_pressure": "Your ability to push for educational excellence. Determines effectiveness in enforcing study habits, test preparation, and grade expectations.",
+    "tiger_discipline": "Your strictness and enforcement of rules. Essential for maintaining rigid schedules, proper behavior, and high standards in all aspects of life.",
+    "social_engineering": "Your skill at controlling your child's social environment. Crucial for managing friendships, extracurricular activities, and building the perfect college application.",
+    "family_honor": "Your commitment to upholding cultural traditions and family reputation. Affects how well your child represents the family and respects ancestral values.",
+    "resource_management": "Your ability to optimize time, money, and connections. Determines how effectively you can provide advantages like tutoring, lessons, and networking opportunities.",
+    "emotional_tactics": "Your skill at psychological motivation techniques. Influences how you leverage guilt, comparison, and conditional approval to ensure compliance."
   },
   "baseSkills": {
     "logical_argument": {
@@ -39,68 +45,132 @@
       "name": "Divert Attention",
       "description": "Change the subject or distract",
       "attributeKey": "creativity"
+    },
+    "test_prep_drilling": {
+      "name": "Test Prep Drilling",
+      "description": "Conducting intensive study sessions and practice tests to ensure top scores on every examination.",
+      "attributeKey": "academic_pressure"
+    },
+    "grade_negotiation": {
+      "name": "Grade Negotiation",
+      "description": "Confronting teachers about marks and assignments, ensuring your child receives every possible point.",
+      "attributeKey": "academic_pressure"
+    },
+    "strict_scheduling": {
+      "name": "Strict Scheduling",
+      "description": "Creating and enforcing a regimented timetable with minimal free time to maximize productivity.",
+      "attributeKey": "tiger_discipline"
+    },
+    "punishment_system": {
+      "name": "Punishment System",
+      "description": "Implementing appropriate consequences for any performance below expectations or rule violations.",
+      "attributeKey": "tiger_discipline"
+    },
+    "playdate_vetting": {
+      "name": "Playdate Vetting",
+      "description": "Carefully selecting acceptable friends based on their academic performance and parental occupation.",
+      "attributeKey": "social_engineering"
+    },
+    "activity_monitoring": {
+      "name": "Activity Monitoring",
+      "description": "Maintaining surveillance on all social interactions and swiftly intervening when necessary.",
+      "attributeKey": "social_engineering"
+    },
+    "relative_comparison": {
+      "name": "Relative Comparison",
+      "description": "Motivating your child through direct comparisons to cousins and other family members' achievements.",
+      "attributeKey": "family_honor"
+    },
+    "cultural_tradition_enforcement": {
+      "name": "Cultural Tradition Enforcement",
+      "description": "Ensuring rigorous participation in cultural practices, language learning, and family obligations.",
+      "attributeKey": "family_honor"
+    },
+    "educational_investment": {
+      "name": "Educational Investment",
+      "description": "Allocating financial resources to the optimal combination of schools, programs, and educational materials.",
+      "attributeKey": "resource_management"
+    },
+    "schedule_optimization": {
+      "name": "Schedule Optimization",
+      "description": "Maximizing each day's productive hours through careful planning and elimination of time-wasting activities.",
+      "attributeKey": "resource_management"
+    },
+    "guilt_induction": {
+      "name": "Guilt Induction",
+      "description": "Reminding your child of family sacrifices made for their benefit to motivate greater effort and performance.",
+      "attributeKey": "emotional_tactics"
+    },
+    "conditional_approval": {
+      "name": "Conditional Approval",
+      "description": "Strategically providing love and praise only when expectations are met or exceeded.",
+      "attributeKey": "emotional_tactics"
     }
   },
   "playerCustomizations": {
-    "personality": {
-      "name": "Personality",
-      "description": "What kind of child are you?",
+    "parentingStyle": {
+      "name": "Parenting Style",
+      "description": "Choose your helicopter parenting specialization",
       "options": [
-        "Obedient Child",
-        "Creative Dreamer",
-        "Secret Rebel",
-        "Stressed Perfectionist"
+        "Academic Taskmaster",
+        "Prestige Climber",
+        "Cultural Purist",
+        "Future Planner",
+        "Talent Maximizer"
       ],
       "impact": {
-        "Obedient Child": {
-          "conformity": 3,
-          "rebellion": -1,
-          "stress": 1
+        "Academic Taskmaster": {
+          "academic_pressure": 2,
+          "emotional_tactics": 1
         },
-        "Creative Dreamer": {
-          "creativity": 3,
-          "intelligence": 1,
-          "conformity": -1
+        "Prestige Climber": {
+          "social_engineering": 2,
+          "resource_management": 1
         },
-        "Secret Rebel": {
-          "rebellion": 3,
-          "conformity": -2,
-          "stress": 1
+        "Cultural Purist": {
+          "family_honor": 2,
+          "tiger_discipline": 1
         },
-        "Stressed Perfectionist": {
-          "intelligence": 2,
-          "stress": 3,
-          "creativity": -1
+        "Future Planner": {
+          "resource_management": 2,
+          "academic_pressure": 1
+        },
+        "Talent Maximizer": {
+          "tiger_discipline": 2,
+          "social_engineering": 1
         }
       }
     },
-    "interest": {
-      "name": "Personal Interest",
-      "description": "What do you actually want to do with your life?",
+    "familyBackground": {
+      "name": "Family Background",
+      "description": "Choose your family's background and values",
       "options": [
-        "Medicine (as expected)",
-        "Art or Music",
-        "Engineering",
-        "Business or Entrepreneurship"
+        "Traditional Immigrant",
+        "Elite Professional",
+        "Academic Legacy",
+        "Entrepreneurial Success",
+        "Competitive Community"
       ],
       "impact": {
-        "Medicine (as expected)": {
-          "conformity": 2,
-          "stress": 1
+        "Traditional Immigrant": {
+          "family_honor": 2,
+          "emotional_tactics": 1
         },
-        "Art or Music": {
-          "creativity": 3,
-          "rebellion": 2,
-          "conformity": -2
+        "Elite Professional": {
+          "academic_pressure": 2,
+          "resource_management": 1
         },
-        "Engineering": {
-          "intelligence": 2,
-          "conformity": 1
+        "Academic Legacy": {
+          "family_honor": 1,
+          "academic_pressure": 2
         },
-        "Business or Entrepreneurship": {
-          "creativity": 1,
-          "rebellion": 1,
-          "intelligence": 1
+        "Entrepreneurial Success": {
+          "tiger_discipline": 2,
+          "resource_management": 1
+        },
+        "Competitive Community": {
+          "social_engineering": 2,
+          "emotional_tactics": 1
         }
       }
     }
