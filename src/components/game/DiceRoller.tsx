@@ -72,7 +72,7 @@ export function Dice({
   return (
     <button
       className={cn(
-        'bg-indigo-600 text-white font-bold flex items-center justify-center rounded-md transition-transform',
+        'bg-[var(--game-button-primary)] text-white font-bold flex items-center justify-center rounded-md transition-transform',
         rolling && 'animate-bounce',
         sizeClasses[size]
       )}
@@ -103,8 +103,8 @@ export default function DiceRoller({ onRoll, className }: DiceRollerProps) {
       
       {result !== null && (
         <div className="text-center">
-          <div className="text-2xl font-bold">{result}</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">
+          <div className="text-2xl font-bold text-[var(--game-text-primary)]">{result}</div>
+          <div className="text-sm text-[var(--game-text-secondary)]">
             {result === 20 ? 'Critical Success!' : result === 1 ? 'Critical Failure!' : ''}
           </div>
         </div>
