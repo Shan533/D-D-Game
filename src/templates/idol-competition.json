@@ -1,0 +1,211 @@
+{
+  "metadata": {
+    "id": "idol-competition",
+    "name": "青春有101：偶像选秀",
+    "description": "Experience the intense competition and drama of being a contestant in a popular idol selection show.",
+    "imageUrl": null,
+    "tags": ["entertainment", "competition", "idol"]
+  },
+  "scenario": "青春有101：偶像选秀",
+  "startingPoint": "你站在《青春有101》初舞台的候场区，PD正在念你的名字。镜头的反光刺得你睁不开眼，耳边传来其他选手的窃窃私语。",
+  "attributes": {
+    "appearance": "颜值",
+    "dance": "舞蹈",
+    "vocal": "唱功",
+    "stamina": "体能",
+    "public_appeal": "人气",
+    "company_support": "公司资源"
+  },
+  "baseSkills": {
+    "stage_explosion": {
+      "name": "舞台爆发",
+      "description": "在关键时刻展现高难度动作吸引目光",
+      "attributeKey": "dance"
+    },
+    "emotional_resonance": {
+      "name": "情感共鸣",
+      "description": "通过歌声传递故事引发观众共情",
+      "attributeKey": "vocal"
+    },
+    "crisis_management": {
+      "name": "危机公关",
+      "description": "巧妙化解负面舆论事件",
+      "attributeKey": "public_appeal"
+    },
+    "fan_interaction": {
+      "name": "粉丝互动",
+      "description": "在直播和线下活动中最大化发挥颜值优势",
+      "attributeKey": "appearance"
+    },
+    "resource_allocation": {
+      "name": "资源置换",
+      "description": "利用公司资源获取额外曝光机会",
+      "attributeKey": "company_support"
+    },
+    "endurance_training": {
+      "name": "体能训练",
+      "description": "增强持久力以应对高强度训练与表演",
+      "attributeKey": "stamina"
+    }
+  },
+  "playerCustomizations": {
+    "background": {
+      "name": "背景选择",
+      "description": "你的出道前身份",
+      "options": [
+        "个人练习生",
+        "三大公司王牌",
+        "网红转型",
+        "回锅肉选手"
+      ],
+      "impact": {
+        "个人练习生": {
+          "public_appeal": 2,
+          "stamina": 1,
+          "company_support": -1
+        },
+        "三大公司王牌": {
+          "company_support": 3,
+          "dance": 1,
+          "public_appeal": -1
+        },
+        "网红转型": {
+          "appearance": 2,
+          "public_appeal": 1,
+          "vocal": -1
+        },
+        "回锅肉选手": {
+          "stamina": 2,
+          "vocal": 1,
+          "public_appeal": -1
+        }
+      }
+    },
+    "first_impression": {
+      "name": "初印象策略",
+      "description": "你的初舞台定位",
+      "options": [
+        "实力碾压",
+        "反差魅力",
+        "情怀牌"
+      ],
+      "impact": {
+        "实力碾压": {
+          "vocal": 2,
+          "dance": 2,
+          "public_appeal": -1
+        },
+        "反差魅力": {
+          "public_appeal": 3,
+          "appearance": 1,
+          "company_support": -1
+        },
+        "情怀牌": {
+          "stamina": 1,
+          "public_appeal": 2,
+          "dance": -1
+        }
+      }
+    }
+  },
+  "npcs": {
+    "mentors": [
+      {
+        "name": "坤PD",
+        "description": "上届冠军，以实力和人气著称，对舞台要求严格又不失温柔"
+      },
+      {
+        "name": "Lily",
+        "description": "韩国顶级女团成员，以舞蹈实力著称，对选手要求严格又喜欢对观众撒娇"
+      },
+      {
+        "name": "欢哥",
+        "description": "专业歌手，关注选手的情感表达，喜欢在选手表演时流泪"
+      },
+      {
+        "name": "姜滨",
+        "description": "节目总导演，掌握最终剪辑权，喜欢暗箱操作，喜欢被拍马屁"
+      }
+    ],
+    "competitors": [
+      {
+        "name": "顶流预备役",
+        "description": "来自超大经纪公司，出道前就有大量粉丝"
+      },
+      {
+        "name": "实力派选手",
+        "description": "技术过硬但缺乏曝光，一心证明自己"
+      },
+      {
+        "name": "流量担当",
+        "description": "外形出众，经常引发话题讨论"
+      },
+      {
+        "name": "黑马选手",
+        "description": "默默无闻但潜力巨大，节目中逐渐崭露头角"
+      }
+    ]
+  },
+  "events": {
+    "first_ranking": {
+      "trigger": "初舞台结束",
+      "description": "第一次排名公布，你的表现决定了初始名次",
+      "choices": [
+        "接受结果冷静分析",
+        "情绪激动表达不满",
+        "寻求导师私下指导",
+        "策略性展示失落"
+      ],
+      "outcomes": {
+        "接受结果冷静分析": {
+          "stamina": 1,
+          "public_appeal": 1
+        },
+        "情绪激动表达不满": {
+          "public_appeal": -2,
+          "company_support": -1
+        },
+        "寻求导师私下指导": {
+          "dance": 1,
+          "vocal": 1
+        },
+        "策略性展示失落": {
+          "public_appeal": 2,
+          "stamina": -1
+        }
+      }
+    },
+    "team_formation": {
+      "trigger": "分组公演",
+      "description": "选择队友和表演曲目，决定你的定位",
+      "choices": [
+        "争取C位",
+        "选择擅长曲风",
+        "跟随人气选手",
+        "挑战自我弱项"
+      ],
+      "outcomes": {
+        "争取C位": {
+          "appearance": 2,
+          "stamina": -1,
+          "public_appeal": 1
+        },
+        "选择擅长曲风": {
+          "dance": 1,
+          "vocal": 1
+        },
+        "跟随人气选手": {
+          "company_support": 1,
+          "public_appeal": 1,
+          "appearance": -1
+        },
+        "挑战自我弱项": {
+          "stamina": 1,
+          "dance": 1,
+          "vocal": 1,
+          "public_appeal": -1
+        }
+      }
+    }
+  }
+} 
