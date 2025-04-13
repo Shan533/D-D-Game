@@ -7,6 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Button } from '@/components/ui/button';
 import GameTemplates from '@/components/game/GameTemplates';
 import AuthCheck from '@/components/auth/AuthCheck';
+import UserProfile from '@/components/auth/UserProfile';
 import { useAuth } from '@/context/AuthContext';
 
 export default function GamePage() {
@@ -64,24 +65,18 @@ export default function GamePage() {
   
   return (
     <AuthCheck>
-      <div className="min-h-screen p-6 bg-slate-50 dark:bg-slate-900">
+      <div className="game-container p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Adventure Selection</h1>
-            <Button 
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
-            >
-              Logout
-            </Button>
+            <h1 className="text-3xl font-bold game-header">Adventure Selection</h1>
+            <UserProfile user={user} onLogout={handleLogout} />
           </div>
           
           <div className="mb-8">
-            <Card className="p-6">
+            <Card className="game-card p-6">
               <CardHeader className="px-0 pt-0">
-                <CardTitle className="text-2xl">Welcome, {user?.username || 'Adventurer'}</CardTitle>
-                <CardDescription>Choose an adventure template to begin your journey</CardDescription>
+                <CardTitle className="text-2xl text-[var(--game-text-primary)]">Welcome, {user?.username || 'Adventurer'}</CardTitle>
+                <CardDescription className="text-[var(--game-text-secondary)]">Choose an adventure template to begin your journey</CardDescription>
               </CardHeader>
               <CardContent className="px-0 pb-0">
                 <GameTemplates />
@@ -90,33 +85,33 @@ export default function GamePage() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="game-card">
               <CardHeader>
-                <CardTitle>Continue Adventure</CardTitle>
-                <CardDescription>Load a previously saved game</CardDescription>
+                <CardTitle className="text-[var(--game-text-primary)]">Continue Adventure</CardTitle>
+                <CardDescription className="text-[var(--game-text-secondary)]">Load a previously saved game</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-[var(--game-text-secondary)]">
                   Your saved games will appear here once you've started playing.
                 </p>
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" disabled className="w-full">No Saved Games</Button>
+              <CardFooter className="border-t border-[var(--game-divider)] pt-4">
+                <Button className="game-button-primary w-full" disabled>No Saved Games</Button>
               </CardFooter>
             </Card>
             
-            <Card>
+            <Card className="game-card">
               <CardHeader>
-                <CardTitle>Game History</CardTitle>
-                <CardDescription>View your completed adventures</CardDescription>
+                <CardTitle className="text-[var(--game-text-primary)]">Game History</CardTitle>
+                <CardDescription className="text-[var(--game-text-secondary)]">View your completed adventures</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-500 dark:text-slate-400">
+                <p className="text-[var(--game-text-secondary)]">
                   Your adventure history will appear here once you've completed games.
                 </p>
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" disabled className="w-full">No Game History</Button>
+              <CardFooter className="border-t border-[var(--game-divider)] pt-4">
+                <Button className="game-button-secondary w-full" disabled>No Game History</Button>
               </CardFooter>
             </Card>
           </div>

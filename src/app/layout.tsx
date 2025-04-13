@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { GameProvider } from "../context/GameContext";
+import './game-theme.css';
 
 export const metadata: Metadata = {
   title: "D&D-Style Interactive Game",

@@ -83,7 +83,7 @@ export default function LoginPage() {
       <Card className="max-w-md w-full">
         <form onSubmit={handleSubmit}>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Sign In</CardTitle>
+            <CardTitle className="text-2xl text-[var(--game-text-primary)]">Sign In</CardTitle>
             <CardDescription>
               Sign in to continue your adventure
             </CardDescription>

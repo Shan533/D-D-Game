@@ -202,26 +202,26 @@ export default function CharacterCreationForm() {
   
   if (!template) {
     return (
-      <Card className="max-w-md mx-auto">
+      <Card className="game-card max-w-md mx-auto">
         <CardContent className="py-10 text-center">
-          <p>Loading template...</p>
+          <p className="text-[var(--game-text-primary)]">Loading template...</p>
         </CardContent>
       </Card>
     );
   }
   
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="game-card max-w-2xl mx-auto">
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle>Create Your Character</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-[var(--game-text-primary)]">Create Your Character</CardTitle>
+          <CardDescription className="text-[var(--game-text-secondary)]">
             Customize your character for the "{template.metadata.name}" adventure
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <label htmlFor="playerName" className="block text-sm font-medium">
+            <label htmlFor="playerName" className="block text-sm font-medium text-[var(--game-text-primary)]">
               Character Name
             </label>
             <Input
@@ -229,16 +229,17 @@ export default function CharacterCreationForm() {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               placeholder="Enter your character's name"
+              className="game-input w-full border-0 shadow-none focus:ring-0"
               required
             />
           </div>
           
           {Object.entries(template.playerCustomizations).map(([key, customization]) => (
             <div key={key} className="space-y-2">
-              <label htmlFor={key} className="block text-sm font-medium">
+              <label htmlFor={key} className="block text-sm font-medium text-[var(--game-text-primary)]">
                 {customization.name}
               </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+              <p className="text-xs text-[var(--game-text-secondary)] mb-2">
                 {customization.description}
               </p>
               <div className="grid grid-cols-2 gap-2">
@@ -246,10 +247,10 @@ export default function CharacterCreationForm() {
                   <label
                     key={option}
                     className={`
-                      border rounded-md p-3 cursor-pointer transition-colors
+                      rounded-md p-3 cursor-pointer transition-all duration-200
                       ${customizations[key] === option 
-                        ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900 dark:border-indigo-400' 
-                        : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'}
+                        ? 'bg-[var(--game-bg-secondary)] border-2 border-[var(--game-button-primary)] shadow-sm' 
+                        : 'bg-[var(--game-card-bg)] border-2 border-[var(--game-divider)] hover:bg-[var(--game-mint-light)]'}
                     `}
                   >
                     <input
@@ -260,7 +261,7 @@ export default function CharacterCreationForm() {
                       onChange={() => handleCustomizationChange(key, option)}
                       className="sr-only"
                     />
-                    <span>{option}</span>
+                    <span className="text-[var(--game-text-primary)] block text-center font-medium">{option}</span>
                   </label>
                 ))}
               </div>
@@ -268,7 +269,7 @@ export default function CharacterCreationForm() {
           ))}
           
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-md text-sm">
+            <div className="p-4 bg-red-50 text-red-700 rounded-lg text-sm border-2 border-red-200 font-medium">
               {error}
             </div>
           )}
@@ -277,15 +278,14 @@ export default function CharacterCreationForm() {
           <div className="flex space-x-2 w-full">
             <Button
               type="button"
-              variant="outline"
-              className="flex-1"
+              className="flex-1 bg-[var(--game-bg-secondary)] text-[var(--game-text-primary)] hover:bg-[var(--game-bg-accent)] rounded-md py-2 px-4 font-medium transition-all duration-200"
               onClick={handleBackButton}
             >
               Back
             </Button>
             <Button
               type="submit"
-              className="flex-1"
+              className="flex-1 game-button-primary rounded-md py-2 px-4 font-medium transition-all duration-200"
               isLoading={loading}
               disabled={loading || !playerName.trim()}
             >

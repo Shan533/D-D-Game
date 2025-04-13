@@ -85,7 +85,7 @@ export default function RegisterPage() {
       <Card className="max-w-md w-full">
         <form onSubmit={handleSubmit}>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Create Account</CardTitle>
+            <CardTitle className="text-2xl text-[var(--game-text-primary)]">Create Account</CardTitle>
             <CardDescription>
               Register to start your adventure
             </CardDescription>

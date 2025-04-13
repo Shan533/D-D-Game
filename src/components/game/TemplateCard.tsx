@@ -48,14 +48,16 @@ export default function TemplateCard({ template }: TemplateCardProps) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">
-          {template.tags.map((tag) => (
-            <span 
-              key={tag} 
-              className="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
-            >
-              {tag}
-            </span>
-          ))}
+          {template.tags && template.tags.length > 0 ? (
+            template.tags.map((tag) => (
+              <span 
+                key={tag} 
+                className="px-2 py-1 text-xs rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+              >
+                {tag}
+              </span>
+            ))
+          ) : null}
         </div>
         <div className="mt-4 text-sm text-slate-500 dark:text-slate-400">
           <span className="font-medium">Estimated Time:</span> {template.estimatedDuration}

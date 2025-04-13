@@ -37,19 +37,19 @@ export default function GameTemplates() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3].map((_, index) => (
-          <Card key={index} className="overflow-hidden">
-            <div className="h-40 bg-slate-200 dark:bg-slate-700">
-              <Skeleton className="h-full w-full" />
+          <Card key={index} className="game-card overflow-hidden">
+            <div className="h-40 bg-[var(--game-bg-secondary)]">
+              <Skeleton className="h-full w-full bg-[var(--game-bg-accent)]" />
             </div>
             <CardHeader>
-              <Skeleton className="h-6 w-2/3 mb-2" />
-              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-6 w-2/3 mb-2 bg-[var(--game-bg-accent)]" />
+              <Skeleton className="h-4 w-full bg-[var(--game-bg-accent)]" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full bg-[var(--game-bg-accent)]" />
             </CardContent>
             <CardFooter>
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full bg-[var(--game-bg-accent)]" />
             </CardFooter>
           </Card>
         ))}
@@ -59,12 +59,12 @@ export default function GameTemplates() {
 
   if (error) {
     return (
-      <div className="p-6 bg-red-50 dark:bg-red-900/30 rounded-lg">
-        <h3 className="text-lg font-medium text-red-800 dark:text-red-200">Error Loading Templates</h3>
-        <p className="mt-2 text-red-700 dark:text-red-300">{error}</p>
+      <div className="p-6 bg-red-50 rounded-lg border-2 border-red-100">
+        <h3 className="text-lg font-bold text-red-800">Error Loading Templates</h3>
+        <p className="mt-2 text-red-700">{error}</p>
         <Button 
           onClick={() => window.location.reload()} 
-          className="mt-4 bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-800 dark:text-red-100 dark:hover:bg-red-700"
+          className="mt-4 bg-red-100 text-red-800 hover:bg-red-200"
         >
           Try Again
         </Button>
@@ -74,9 +74,9 @@ export default function GameTemplates() {
 
   if (templates.length === 0) {
     return (
-      <div className="p-6 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
-        <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">No Templates Available</h3>
-        <p className="mt-2 text-yellow-700 dark:text-yellow-300">
+      <div className="p-6 bg-[var(--game-mint-light)] rounded-lg border border-[var(--game-mint)]">
+        <h3 className="text-lg font-bold text-[var(--game-text-primary)]">No Templates Available</h3>
+        <p className="mt-2 text-[var(--game-text-secondary)]">
           No game templates have been added yet. Please check back later.
         </p>
       </div>
@@ -86,35 +86,57 @@ export default function GameTemplates() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {templates.map((template) => (
-        <Card key={template.metadata.id} className="overflow-hidden flex flex-col">
+        <Card key={template.metadata.id} className="game-card overflow-hidden flex flex-col h-[480px]">
           {template.metadata.imageUrl ? (
             <div 
               className="h-48 bg-cover bg-center" 
               style={{ backgroundImage: `url(${template.metadata.imageUrl})` }}
             />
           ) : (
-            <div className="h-48 bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="h-48 bg-gradient-to-r from-[var(--game-bg-accent)] to-[var(--game-mint-dark)] flex items-center justify-center">
               <span className="text-white text-2xl font-bold">{template.metadata.name.charAt(0)}</span>
             </div>
           )}
           
           <CardHeader>
-            <CardTitle>{template.metadata.name}</CardTitle>
-            <CardDescription>
-              {template.metadata.description?.substring(0, 100)}{template.metadata.description?.length > 100 ? '...' : ''}
+            <div className="flex justify-between items-start">
+              <CardTitle className="line-clamp-1 text-[var(--game-text-primary)]">{template.metadata.name}</CardTitle>
+              {template.metadata.difficulty && (
+                <div className="px-2 py-1 text-xs rounded-full bg-[var(--game-mint-light)] text-[var(--game-text-accent)] whitespace-nowrap">
+                  {template.metadata.difficulty}
+                </div>
+              )}
+            </div>
+            <CardDescription className="mt-2 line-clamp-2 text-[var(--game-text-secondary)]">
+              {template.metadata.description}
             </CardDescription>
           </CardHeader>
           
           <CardContent className="flex-grow">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              {template.metadata.description}
-            </p>
+            <div className="flex flex-wrap gap-2 mb-3 min-h-[28px]">
+              {template.metadata.tags && template.metadata.tags.length > 0 ? (
+                template.metadata.tags.map((tag) => (
+                  <span 
+                    key={tag} 
+                    className="px-2 py-1 text-xs rounded-full bg-[var(--game-bg-secondary)] text-[var(--game-text-accent)]"
+                  >
+                    {tag}
+                  </span>
+                ))
+              ) : null}
+            </div>
+            
+            {template.metadata.estimatedDuration && (
+              <div className="mt-1 text-sm text-[var(--game-text-secondary)]">
+                <span className="font-medium">Est. Time:</span> {template.metadata.estimatedDuration}
+              </div>
+            )}
           </CardContent>
           
           <CardFooter>
             <Button 
               onClick={() => handleSelectTemplate(template.metadata.id)}
-              className="w-full"
+              className="w-full game-button-primary"
             >
               Select Adventure
             </Button>
