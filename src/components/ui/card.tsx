@@ -50,7 +50,7 @@ export const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
     return (
       <h3
         ref={ref}
-        className={clsx('text-xl font-semibold text-slate-900 dark:text-slate-50', className)}
+        className={clsx('text-xl font-semibold text-[var(--game-text-primary)]', className)}
         {...props}
       />
     );

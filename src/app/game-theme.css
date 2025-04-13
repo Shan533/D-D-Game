@@ -1,0 +1,182 @@
+/* Game Theme Colors */
+:root {
+  /* Main colors */
+  --game-bg-primary: #e0f7fa; /* Light baby blue */
+  --game-bg-secondary: #b2ebf2; /* Baby blue */
+  --game-bg-accent: #80deea; /* Darker baby blue */
+  
+  --game-mint-light: #e0f2f1; /* Light mint */
+  --game-mint: #b2dfdb; /* Mint */
+  --game-mint-dark: #80cbc4; /* Darker mint */
+  
+  /* Text colors */
+  --game-text-primary: #105476; /* Dark text */
+  --game-text-secondary: #455a64; /* Medium dark text */
+  --game-text-accent: #00796b; /* Mint accent for text */
+  
+  /* Button colors */
+  --game-button-primary: #4dd0e1; /* Baby blue button */
+  --game-button-hover: #26c6da; /* Baby blue button hover */
+  --game-button-secondary: #80cbc4; /* Mint button */
+  --game-button-secondary-hover: #4db6ac; /* Mint button hover */
+  
+  /* Card colors */
+  --game-card-bg: #ffffff; /* White card background */
+  --game-card-border: #b2ebf2; /* Baby blue border */
+  
+  /* Avatar colors */
+  --game-avatar-bg: #26c6da; /* Avatar background */
+  
+  /* Elements */
+  --game-divider: #b2ebf2; /* Divider color */
+  --game-input-border: #b2dfdb; /* Input border color */
+  --game-input-focus: #26c6da; /* Input focus color */
+}
+
+/* Game container */
+.game-container {
+  background-color: var(--game-bg-primary);
+  min-height: 100vh;
+}
+
+/* Game card */
+.game-card {
+  background-color: var(--game-card-bg);
+  border: 2px solid var(--game-card-border);
+  border-radius: 1rem;
+  box-shadow: 0 6px 12px rgba(0, 188, 212, 0.1);
+}
+
+/* Game header */
+.game-header {
+  color: var(--game-text-primary);
+  text-shadow: 0px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+/* Ensure all headings have good contrast */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--game-text-primary);
+  font-weight: 600;
+}
+
+/* Game button */
+.game-button-primary {
+  background-color: var(--game-button-primary);
+  color: white;
+}
+.game-button-primary:hover {
+  background-color: var(--game-button-hover);
+}
+
+.game-button-secondary {
+  background-color: var(--game-button-secondary);
+  color: white;
+}
+.game-button-secondary:hover {
+  background-color: var(--game-button-secondary-hover);
+}
+
+/* Game avatar */
+.game-avatar {
+  background-color: var(--game-avatar-bg);
+  color: white;
+}
+
+/* Game input */
+.game-input {
+  border: 2px solid var(--game-input-border);
+  background-color: var(--game-card-bg);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--game-text-primary);
+  transition: all 0.2s ease;
+}
+
+.game-input:hover {
+  border-color: var(--game-bg-accent);
+}
+
+.game-input:focus {
+  border-color: var(--game-input-focus);
+  box-shadow: 0 0 0 3px rgba(38, 198, 218, 0.25);
+  outline: none;
+}
+
+.game-input::placeholder {
+  color: var(--game-text-secondary);
+  opacity: 0.7;
+}
+
+.game-input:disabled {
+  background-color: var(--game-mint-light);
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Game divider */
+.game-divider {
+  border-color: var(--game-divider);
+}
+
+/* Game tabs */
+.game-tabs {
+  background-color: var(--game-mint-light);
+  border-radius: 1rem;
+  padding: 0.25rem;
+  overflow: hidden;
+}
+
+.game-tab {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 2.5rem;
+  border-radius: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+  padding: 8px;
+  color: var(--game-text-primary);
+  background-color: var(--game-bg-secondary);
+  border-bottom: 2px solid transparent;
+  transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+.game-tab:hover {
+  background-color: var(--game-bg-accent);
+  color: var(--game-text-accent);
+}
+
+.game-tab-active {
+  background-color: var(--game-button-primary) !important;
+  color: white !important;
+  border-bottom: 2px solid var(--game-button-primary-hover) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Chat area */
+.game-chat-area {
+  background-color: var(--game-card-bg);
+  border: 1px solid var(--game-mint);
+}
+
+/* Game messages */
+.game-message {
+  background-color: var(--game-bg-secondary);
+  border-radius: 0.75rem;
+}
+.game-message-user {
+  background-color: var(--game-mint);
+}
+
+/* Character sheet */
+.game-character-sheet {
+  background-color: var(--game-card-bg);
+}
+.game-attribute {
+  background-color: var(--game-mint-light);
+}
+.game-skill {
+  background-color: var(--game-bg-secondary);
+} 
