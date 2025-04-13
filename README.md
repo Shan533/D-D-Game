@@ -18,6 +18,14 @@ A digital D&D-style interactive storytelling game with AI-powered narrative, dic
 - **AI**: OpenAI API for dynamic storytelling
 - **Styling**: Custom UI components
 
+## Documentation
+
+Detailed documentation about the project is available in the [docs](/docs) directory:
+
+- [Design Document](/docs/design.md) - Project overview, architecture, and feature descriptions
+- [Database Setup](/docs/db-setup.md) - Guide for setting up the Supabase database
+- [File Structure](/docs/file_structure.md) - Overview of the codebase organization
+
 ## Getting Started
 
 ### Prerequisites
@@ -96,6 +104,9 @@ Characters have attributes that affect gameplay:
 - `/src/types`: TypeScript type definitions
 - `/src/app`: Next.js App Router pages
 - `/src/utils`: Core utilities including Supabase client configuration
+- `/docs`: Project documentation
+
+For a more detailed overview of the file structure, see the [File Structure](/docs/file_structure.md) document.
 
 ## License
 
