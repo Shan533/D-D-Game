@@ -3,7 +3,8 @@
     "id": "helicopter-parent",
     "name": "Raising Your Asian Child (Helicopter Parent Edition)",
     "description": "Experience the pressure of having demanding Asian parents with high expectations for your academic success.",
-    "imageUrl": null
+    "imageUrl": null,
+    "tags": ["family", "education", "parenting"]
   },
   "scenario": "Raising Your Asian Child (Helicopter Parent Edition): You are parenting your asian kid to be the best student ever! (or not)",
   "startingPoint": "First Parent-Teacher Conference of the School Year",

@@ -3,7 +3,8 @@
     "id": "white-house",
     "name": "White House Chaos: Trump's Advisor",
     "description": "You are Trump's advisor, trying to make him the best president the universe has ever seen (Parody).",
-    "imageUrl": null
+    "imageUrl": null,
+    "tags": ["politics", "trump", "white house"]
   },
   "scenario": "White House Chaos: Trump's Advisor",
   "startingPoint": "Your first day in the chaotic White House. The President just fired your predecessor via tweet while you were being security-screened. He's already called you by three different names and asked if you can 'do something about those tariff people.' Intelligence briefings are piling up unread, and CNN is reporting a possible missile test in North Korea. The President wants McDonald's for lunch and someone to explain why his approval rating isn't 100%.",

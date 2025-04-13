@@ -13,9 +13,12 @@ Templates define the game world, characters, attributes, skills, and customizati
 ```
 "metadata": {
   "id": "unique-template-id",
-  "name": "Display Name",
+  "name": "Display Name", 
   "description": "Brief description of the scenario",
-  "imageUrl": "path/to/image.jpg" // Optional
+  "imageUrl": "path/to/image.jpg", // Optional
+  "tags": ["tag1", "tag2", "tag3"] // Array of category tags for filtering
+  "estimatedDuration": "2-3 hours", // Optional, estimated gameplay duration
+  "difficulty": "Beginner", // Optional, gameplay difficulty level
 }
 ```
 
