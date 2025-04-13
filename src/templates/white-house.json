@@ -1,0 +1,136 @@
+{
+  "metadata": {
+    "id": "white-house",
+    "name": "White House Chaos",
+    "description": "You're a senior advisor to an unpredictable US President. Navigate the chaotic political environment while trying to implement policy and manage crises.",
+    "imageUrl": null
+  },
+  "scenario": "Political Chaos in the White House",
+  "startingPoint": "It's your first week as a senior advisor to the President. A controversial tweet has just gone viral, foreign leaders are demanding clarification, and the press is hammering the communications team. The Chief of Staff has summoned you to a crisis meeting.",
+  "attributes": {
+    "diplomacy": "Diplomacy",
+    "media_savvy": "Media Savvy",
+    "policy_expertise": "Policy Expertise",
+    "loyalty": "Loyalty",
+    "ethics": "Ethics"
+  },
+  "baseSkills": {
+    "press_management": {
+      "name": "Press Management",
+      "description": "Control the media narrative",
+      "attributeKey": "media_savvy"
+    },
+    "policy_analysis": {
+      "name": "Policy Analysis",
+      "description": "Provide expert insight on policy implications",
+      "attributeKey": "policy_expertise"
+    },
+    "diplomatic_negotiation": {
+      "name": "Diplomatic Negotiation",
+      "description": "Smooth tensions with foreign or domestic officials",
+      "attributeKey": "diplomacy"
+    },
+    "political_maneuvering": {
+      "name": "Political Maneuvering",
+      "description": "Navigate internal White House politics",
+      "attributeKey": "loyalty"
+    },
+    "whistle_blowing": {
+      "name": "Whistle Blowing",
+      "description": "Report unethical behavior through proper channels",
+      "attributeKey": "ethics"
+    }
+  },
+  "playerCustomizations": {
+    "background": {
+      "name": "Professional Background",
+      "description": "What was your career before this role?",
+      "options": [
+        "Career Politician",
+        "Business Executive",
+        "Media Personality",
+        "Academic Expert"
+      ],
+      "impact": {
+        "Career Politician": {
+          "diplomacy": 2,
+          "loyalty": 2,
+          "ethics": -1
+        },
+        "Business Executive": {
+          "policy_expertise": 1,
+          "loyalty": 1,
+          "media_savvy": 1
+        },
+        "Media Personality": {
+          "media_savvy": 3,
+          "diplomacy": 1,
+          "policy_expertise": -1
+        },
+        "Academic Expert": {
+          "policy_expertise": 3,
+          "ethics": 1,
+          "media_savvy": -1
+        }
+      }
+    },
+    "motivation": {
+      "name": "Personal Motivation",
+      "description": "Why did you take this job?",
+      "options": [
+        "Political Ambition",
+        "Policy Implementation",
+        "Patriotic Duty",
+        "Personal Fame"
+      ],
+      "impact": {
+        "Political Ambition": {
+          "loyalty": 2,
+          "media_savvy": 1,
+          "ethics": -1
+        },
+        "Policy Implementation": {
+          "policy_expertise": 2,
+          "ethics": 1,
+          "media_savvy": 0
+        },
+        "Patriotic Duty": {
+          "ethics": 2,
+          "loyalty": 1,
+          "media_savvy": 0
+        },
+        "Personal Fame": {
+          "media_savvy": 2,
+          "diplomacy": 1,
+          "ethics": -1
+        }
+      }
+    }
+  },
+  "npcs": {
+    "administration": [
+      {
+        "name": "President",
+        "description": "Impulsive, media-obsessed, and unpredictable, but with remarkable political instincts."
+      },
+      {
+        "name": "Chief of Staff",
+        "description": "Practical, overworked, and trying to maintain some semblance of order."
+      },
+      {
+        "name": "Communications Director",
+        "description": "Constantly in damage control mode with a strained relationship with the press."
+      }
+    ],
+    "external": [
+      {
+        "name": "Press Corps",
+        "description": "Eager for stories and constantly challenging the administration's narrative."
+      },
+      {
+        "name": "Opposition Leader",
+        "description": "Looking for any opportunity to criticize the administration."
+      }
+    ]
+  }
+} 

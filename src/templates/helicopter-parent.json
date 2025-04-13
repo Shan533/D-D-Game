@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "id": "helicopter-parent",
+    "name": "Asian Helicopter Parenting",
+    "description": "Experience the pressure of having demanding Asian parents with high expectations for your academic success.",
+    "imageUrl": null
+  },
+  "scenario": "Life with Helicopter Parents",
+  "startingPoint": "You've just received your report card with a B+ grade in mathematics. Your parents have called you into the living room for a 'chat'. They're expecting you to become a doctor, and anything less than straight As is simply unacceptable.",
+  "attributes": {
+    "intelligence": "Intelligence",
+    "creativity": "Creativity",
+    "conformity": "Conformity",
+    "rebellion": "Rebellion",
+    "stress": "Stress"
+  },
+  "baseSkills": {
+    "logical_argument": {
+      "name": "Logical Argument",
+      "description": "Use facts and reason to make your case",
+      "attributeKey": "intelligence"
+    },
+    "emotional_appeal": {
+      "name": "Emotional Appeal",
+      "description": "Appeal to your parents' emotions",
+      "attributeKey": "creativity"
+    },
+    "promise_improvement": {
+      "name": "Promise Improvement",
+      "description": "Commit to doing better next time",
+      "attributeKey": "conformity"
+    },
+    "stand_ground": {
+      "name": "Stand Your Ground",
+      "description": "Refuse to give in to pressure",
+      "attributeKey": "rebellion"
+    },
+    "divert_attention": {
+      "name": "Divert Attention",
+      "description": "Change the subject or distract",
+      "attributeKey": "creativity"
+    }
+  },
+  "playerCustomizations": {
+    "personality": {
+      "name": "Personality",
+      "description": "What kind of child are you?",
+      "options": [
+        "Obedient Child",
+        "Creative Dreamer",
+        "Secret Rebel",
+        "Stressed Perfectionist"
+      ],
+      "impact": {
+        "Obedient Child": {
+          "conformity": 3,
+          "rebellion": -1,
+          "stress": 1
+        },
+        "Creative Dreamer": {
+          "creativity": 3,
+          "intelligence": 1,
+          "conformity": -1
+        },
+        "Secret Rebel": {
+          "rebellion": 3,
+          "conformity": -2,
+          "stress": 1
+        },
+        "Stressed Perfectionist": {
+          "intelligence": 2,
+          "stress": 3,
+          "creativity": -1
+        }
+      }
+    },
+    "interest": {
+      "name": "Personal Interest",
+      "description": "What do you actually want to do with your life?",
+      "options": [
+        "Medicine (as expected)",
+        "Art or Music",
+        "Engineering",
+        "Business or Entrepreneurship"
+      ],
+      "impact": {
+        "Medicine (as expected)": {
+          "conformity": 2,
+          "stress": 1
+        },
+        "Art or Music": {
+          "creativity": 3,
+          "rebellion": 2,
+          "conformity": -2
+        },
+        "Engineering": {
+          "intelligence": 2,
+          "conformity": 1
+        },
+        "Business or Entrepreneurship": {
+          "creativity": 1,
+          "rebellion": 1,
+          "intelligence": 1
+        }
+      }
+    }
+  },
+  "npcs": {
+    "family": [
+      {
+        "name": "Mom",
+        "description": "Traditional and strict, she believes in discipline and hard work."
+      },
+      {
+        "name": "Dad",
+        "description": "Success-driven and practical, he immigrated for a better life and expects you to maximize the opportunity."
+      },
+      {
+        "name": "Uncle",
+        "description": "More understanding but still traditional, he sometimes advocates for you."
+      }
+    ]
+  }
+} 
