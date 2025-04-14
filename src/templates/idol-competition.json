@@ -20,32 +20,32 @@
     "stage_explosion": {
       "name": "舞台爆发",
       "description": "在关键时刻展现高难度动作吸引目光",
-      "attributeKey": "dance"
+      "attributeKey": "舞蹈"
     },
     "emotional_resonance": {
       "name": "情感共鸣",
       "description": "通过歌声传递故事引发观众共情",
-      "attributeKey": "vocal"
+      "attributeKey": "唱功"
     },
     "crisis_management": {
       "name": "危机公关",
       "description": "巧妙化解负面舆论事件",
-      "attributeKey": "public_appeal"
+      "attributeKey": "人气"
     },
     "fan_interaction": {
       "name": "粉丝互动",
       "description": "在直播和线下活动中最大化发挥颜值优势",
-      "attributeKey": "appearance"
+      "attributeKey": "颜值"
     },
     "resource_allocation": {
       "name": "资源置换",
       "description": "利用公司资源获取额外曝光机会",
-      "attributeKey": "company_support"
+      "attributeKey": "公司资源"
     },
     "endurance_training": {
       "name": "体能训练",
       "description": "增强持久力以应对高强度训练与表演",
-      "attributeKey": "stamina"
+      "attributeKey": "体能"
     }
   },
   "playerCustomizations": {
@@ -60,24 +60,24 @@
       ],
       "impact": {
         "个人练习生": {
-          "public_appeal": 2,
-          "stamina": 1,
-          "company_support": -1
+          "颜值": 2,
+          "体能": 1,
+          "公司资源": -1
         },
         "三大公司王牌": {
-          "company_support": 3,
-          "dance": 1,
-          "public_appeal": -1
+          "公司资源": 3,
+          "舞蹈": 1,
+          "颜值": -1
         },
         "网红转型": {
-          "appearance": 2,
-          "public_appeal": 1,
-          "vocal": -1
+          "颜值": 2,
+          "人气": 1,
+          "唱功": -1
         },
         "回锅肉选手": {
-          "stamina": 2,
-          "vocal": 1,
-          "public_appeal": -1
+          "体能": 2,
+          "唱功": 1,
+          "人气": -1
         }
       }
     },
@@ -91,19 +91,19 @@
       ],
       "impact": {
         "实力碾压": {
-          "vocal": 2,
-          "dance": 2,
-          "public_appeal": -1
+          "唱功": 2,
+          "舞蹈": 2,
+          "人气": -1
         },
         "反差魅力": {
-          "public_appeal": 3,
-          "appearance": 1,
-          "company_support": -1
+          "颜值": 3,
+          "舞蹈": 1,
+          "公司资源": -1
         },
         "情怀牌": {
-          "stamina": 1,
-          "public_appeal": 2,
-          "dance": -1
+          "体能": 1,
+          "颜值": 2,
+          "舞蹈": -1
         }
       }
     }
@@ -146,8 +146,124 @@
       }
     ]
   },
+  "stages": {
+    "initial_audition": {
+      "name": "初舞台",
+      "description": "展示个人才艺，获得导师认可",
+      "goals": [
+        {
+          "id": "impress_mentors",
+          "name": "获得导师认可",
+          "description": "至少获得3位导师的认可",
+          "requirements": {
+            "唱功": 3,
+            "舞蹈": 3
+          }
+        },
+        {
+          "id": "first_impression",
+          "name": "初印象",
+          "description": "在观众中建立初步印象",
+          "requirements": {
+            "颜值": 2
+          }
+        }
+      ],
+      "completion_conditions": {
+        "min_goals_completed": 1,
+        "min_attributes": {
+          "唱功": 2,
+          "舞蹈": 2
+        }
+      },
+      "rewards": {
+        "attribute_bonus": {
+          "颜值": 1
+        },
+        "unlock_skills": ["舞台爆发"]
+      }
+    },
+    "group_performance": {
+      "name": "分组公演",
+      "description": "与队友合作完成舞台表演",
+      "goals": [
+        {
+          "id": "team_coordination",
+          "name": "团队协作",
+          "description": "与队友配合完成表演",
+          "requirements": {
+            "舞蹈": 4,
+            "体能": 3
+          }
+        },
+        {
+          "id": "audience_engagement",
+          "name": "观众互动",
+          "description": "在表演中与观众互动",
+          "requirements": {
+            "颜值": 3,
+            "舞蹈": 3
+          }
+        }
+      ],
+      "completion_conditions": {
+        "min_goals_completed": 1,
+        "min_attributes": {
+          "舞蹈": 3,
+          "唱功": 3
+        }
+      },
+      "rewards": {
+        "attribute_bonus": {
+          "公司资源": 1
+        },
+        "unlock_skills": ["情感共鸣"]
+      }
+    },
+    "final_showdown": {
+      "name": "总决赛",
+      "description": "最终舞台，争夺出道位",
+      "goals": [
+        {
+          "id": "perfect_performance",
+          "name": "完美表演",
+          "description": "完成无失误的舞台表演",
+          "requirements": {
+            "唱功": 5,
+            "舞蹈": 5,
+            "体能": 4
+          }
+        },
+        {
+          "id": "fan_support",
+          "name": "粉丝支持",
+          "description": "获得足够的粉丝投票",
+          "requirements": {
+            "颜值": 5,
+            "公司资源": 3
+          }
+        }
+      ],
+      "completion_conditions": {
+        "min_goals_completed": 1,
+        "min_attributes": {
+          "唱功": 4,
+          "舞蹈": 4,
+          "颜值": 4
+        }
+      },
+      "rewards": {
+        "attribute_bonus": {
+          "颜值": 2,
+          "公司资源": 2
+        },
+        "unlock_skills": ["危机公关", "粉丝互动"]
+      }
+    }
+  },
   "events": {
     "first_ranking": {
+      "stage": "initial_audition",
       "trigger": "初舞台结束",
       "description": "第一次排名公布，你的表现决定了初始名次",
       "choices": [
@@ -158,24 +274,25 @@
       ],
       "outcomes": {
         "接受结果冷静分析": {
-          "stamina": 1,
-          "public_appeal": 1
+          "体能": 1,
+          "颜值": 1
         },
         "情绪激动表达不满": {
-          "public_appeal": -2,
-          "company_support": -1
+          "颜值": -2,
+          "公司资源": -1
         },
         "寻求导师私下指导": {
-          "dance": 1,
-          "vocal": 1
+          "舞蹈": 1,
+          "唱功": 1
         },
         "策略性展示失落": {
-          "public_appeal": 2,
-          "stamina": -1
+          "颜值": 2,
+          "体能": -1
         }
       }
     },
     "team_formation": {
+      "stage": "group_performance",
       "trigger": "分组公演",
       "description": "选择队友和表演曲目，决定你的定位",
       "choices": [
@@ -186,24 +303,24 @@
       ],
       "outcomes": {
         "争取C位": {
-          "appearance": 2,
-          "stamina": -1,
-          "public_appeal": 1
+          "舞蹈": 2,
+          "体能": -1,
+          "颜值": 1
         },
         "选择擅长曲风": {
-          "dance": 1,
-          "vocal": 1
+          "舞蹈": 1,
+          "唱功": 1
         },
         "跟随人气选手": {
-          "company_support": 1,
-          "public_appeal": 1,
-          "appearance": -1
+          "公司资源": 1,
+          "颜值": 1,
+          "舞蹈": -1
         },
         "挑战自我弱项": {
-          "stamina": 1,
-          "dance": 1,
-          "vocal": 1,
-          "public_appeal": -1
+          "体能": 1,
+          "舞蹈": 1,
+          "唱功": 1,
+          "颜值": -1
         }
       }
     }
