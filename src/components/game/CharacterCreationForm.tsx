@@ -278,7 +278,7 @@ export default function CharacterCreationForm() {
           <div className="flex space-x-2 w-full">
             <Button
               type="button"
-              className="flex-1 bg-[var(--game-bg-secondary)] text-[var(--game-text-primary)] hover:bg-[var(--game-bg-accent)] rounded-md py-2 px-4 font-medium transition-all duration-200"
+              className="flex-1 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)] rounded-md py-2 px-4 font-medium transition-all duration-200"
               onClick={handleBackButton}
             >
               Back
