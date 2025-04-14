@@ -38,8 +38,9 @@ interface GameContextType {
   endGame: () => Promise<void>;
 
   // Gameplay
-  performAction: (action: string, useSkill?: string, rollDice?: boolean) => Promise<void>;
+  performAction: (action: string, useSkill?: string, rollDice?: boolean, diceValue?: number | null) => Promise<void>;
   rollDiceForSkill: (skill: string) => Promise<number>;
+  clearDiceResult: () => void;
 }
 
 const initialContext: GameContextType = {
@@ -60,6 +61,7 @@ const initialContext: GameContextType = {
   endGame: async () => {},
   performAction: async () => {},
   rollDiceForSkill: async () => 0,
+  clearDiceResult: () => {},
 };
 
 const GameContext = createContext<GameContextType>(initialContext);
@@ -469,7 +471,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const performAction = async (
     action: string,
     useSkill?: string,
-    rollDice: boolean = false
+    rollDice: boolean = false,
+    diceValue?: number | null
   ): Promise<void> => {
     try {
       if (!gameState || !template || !sessionId) {
@@ -484,15 +487,40 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       
       // Handle dice roll if required
       if (rollDice && useSkill) {
-        const total = await rollDiceForSkill(useSkill);
-        
-        if (diceResult) {
+        if (diceValue) {
+          // Use the provided dice value from the UI
+          const skill = template.baseSkills[useSkill];
+          const attributeName = skill?.attributeModifier || '';
+          const attributeValue = gameState.attributes[attributeName];
+          
+          // Calculate modifier (simplified: attribute value / 5, rounded down)
+          const modifier = Math.floor(attributeValue / 5);
+          const total = calculateTotal(diceValue, modifier);
+          
+          setDiceResult({
+            roll: diceValue,
+            modifier,
+            total,
+            success: total >= 10 // Simple success threshold
+          });
+          
           diceRollResult = {
-            roll: diceResult.roll,
-            attributeModifier: diceResult.modifier,
+            roll: diceValue,
+            attributeModifier: modifier,
             total,
           };
-          diceRollValue = diceResult.roll;
+          diceRollValue = diceValue;
+        } else {
+          const total = await rollDiceForSkill(useSkill);
+          
+          if (diceResult) {
+            diceRollResult = {
+              roll: diceResult.roll,
+              attributeModifier: diceResult.modifier,
+              total,
+            };
+            diceRollValue = diceResult.roll;
+          }
         }
       }
       
@@ -521,6 +549,10 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const clearDiceResult = (): void => {
+    setDiceResult(null);
+  };
+
   const value: GameContextType = {
     activeGame,
     loading,
@@ -539,6 +571,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     endGame,
     performAction,
     rollDiceForSkill,
+    clearDiceResult,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

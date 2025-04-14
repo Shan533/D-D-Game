@@ -14,6 +14,8 @@ export default function ChatInterface() {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showSkillsPanel, setShowSkillsPanel] = useState(false);
+  const [diceValue, setDiceValue] = useState<number | null>(null);
+  const [showDiceHistory, setShowDiceHistory] = useState(true);  // Controls whether to show dice results
   const chatEndRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   
@@ -23,7 +25,8 @@ export default function ChatInterface() {
     aiResponse, 
     diceResult, 
     performAction, 
-    loading 
+    loading,
+    clearDiceResult  // Get the clearDiceResult function from context
   } = useGame();
   
   // Typing effect for AI responses
@@ -122,16 +125,37 @@ export default function ChatInterface() {
     return Math.min(95, Math.max(5, chance));
   };
   
+  // UseEffect to clear dice result after a new response
+  useEffect(() => {
+    if (aiResponse) {
+      // Hide previous dice results when a new response is received
+      setShowDiceHistory(false);
+    }
+  }, [aiResponse]);
+
+  // Show dice history again when user starts a new action
+  useEffect(() => {
+    if (action.trim() || selectedSkill) {
+      setShowDiceHistory(true);
+    }
+  }, [action, selectedSkill]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!action.trim() || isTyping) return;
     
     try {
-      await performAction(action, selectedSkill || undefined, showDice);
+      // Clear any previous dice results before submitting a new action
+      if (!showDice || !diceValue) {
+        clearDiceResult();
+      }
+      
+      await performAction(action, selectedSkill || undefined, showDice, diceValue);
       setAction('');
       setSelectedSkill(null);
       setShowDice(false);
+      setDiceValue(null);
     } catch (error) {
       console.error('Error performing action:', error);
     }
@@ -142,10 +166,13 @@ export default function ChatInterface() {
       setSelectedSkill(null);
     } else {
       setSelectedSkill(skillId);
-      // TODO: Add dice roll to skill, 老虎机pop up， use DiceRoller.tsx
       setShowDice(true);
       setShowSkillsPanel(false);
     }
+  };
+  
+  const handleDiceRoll = (value: number) => {
+    setDiceValue(value);
   };
   
   const skipTypingEffect = () => {
@@ -194,17 +221,27 @@ export default function ChatInterface() {
           </div>
         )}
         
-        {/* Dice roll result */}
-        {diceResult && (
+        {/* Dice roll result - Only shown if showDiceHistory is true */}
+        {diceResult && showDiceHistory && (
           <div className="bg-[var(--game-bg-secondary)] p-4 rounded-lg border border-[var(--game-bg-accent)]">
-            <p className="font-medium text-[var(--game-text-primary)]">
-              Dice Roll: {diceResult.roll} + {diceResult.modifier} = {diceResult.total}
-              {diceResult.success !== undefined && (
-                <span className={diceResult.success ? "text-green-600 ml-2" : "text-red-600 ml-2"}>
-                  {diceResult.success ? "Success!" : "Failure!"}
-                </span>
-              )}
-            </p>
+            <div className="flex justify-between items-center">
+              <p className="font-medium text-[var(--game-text-primary)]">
+                Dice Roll: {diceResult.roll} + {diceResult.modifier} = {diceResult.total}
+                {diceResult.success !== undefined && (
+                  <span className={diceResult.success ? "text-green-600 ml-2" : "text-red-600 ml-2"}>
+                    {diceResult.success ? "Success!" : "Failure!"}
+                  </span>
+                )}
+              </p>
+              <Button 
+                onClick={() => setShowDiceHistory(false)} 
+                size="sm" 
+                variant="ghost" 
+                className="text-[var(--game-text-secondary)] hover:text-[var(--game-text-primary)]"
+              >
+                Hide
+              </Button>
+            </div>
           </div>
         )}
         
@@ -297,7 +334,24 @@ export default function ChatInterface() {
                       Roll dice for this skill
                     </label>
                   </div>
-                  {showDice && <Dice animate={false} size="sm" />}
+                  {showDice && (
+                    diceValue ? 
+                    <div className="flex items-center">
+                      <Dice value={diceValue} size="sm" animate={false} />
+                      <Button 
+                        onClick={() => setDiceValue(null)} 
+                        size="sm" 
+                        className="ml-2 bg-[var(--game-bg-accent)] hover:bg-[var(--game-divider)] text-[var(--game-text-primary)]"
+                      >
+                        Reset
+                      </Button>
+                    </div>
+                    : 
+                    <div className="flex items-center">
+                      <Dice onRollComplete={handleDiceRoll} size="sm" />
+                      <span className="ml-2 text-xs text-[var(--game-text-secondary)]">Click to roll</span>
+                    </div>
+                  )}
                 </div>
               )}
               
@@ -365,6 +419,7 @@ export default function ChatInterface() {
                       onClick={() => {
                         setSelectedSkill(null);
                         setShowDice(false);
+                        setDiceValue(null);
                       }}
                     >
                       Clear
@@ -378,8 +433,23 @@ export default function ChatInterface() {
                   <div className="flex justify-between items-center mt-1">
                     {showDice && (
                       <div className="flex items-center justify-between p-2 bg-[var(--game-bg-secondary)] rounded-md flex-1 mr-2">
-                        <span className="text-xs text-[var(--game-text-primary)]">Using dice roll</span>
-                        <Dice animate={false} size="sm" />
+                        <span className="text-xs text-[var(--game-text-primary)]">
+                          {diceValue ? `Rolled: ${diceValue}` : 'Roll dice:'}
+                        </span>
+                        {diceValue ? 
+                          <div className="flex items-center">
+                            <Dice value={diceValue} animate={false} size="sm" />
+                            <Button 
+                              onClick={() => setDiceValue(null)} 
+                              size="sm" 
+                              className="ml-2 bg-[var(--game-bg-accent)] hover:bg-[var(--game-divider)] text-[var(--game-text-primary)]"
+                            >
+                              Reset
+                            </Button>
+                          </div>
+                          : 
+                          <Dice onRollComplete={handleDiceRoll} size="sm" />
+                        }
                       </div>
                     )}
                     
