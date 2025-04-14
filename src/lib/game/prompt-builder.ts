@@ -1,4 +1,4 @@
-import { GameState, GameTemplate } from '../../types/game';
+import { GameState, GameTemplate, GameHistoryEntry } from '../../types/game';
 
 /**
  * Builds a prompt for the AI based on the game state and player action
@@ -35,7 +35,7 @@ export const buildGamePrompt = (
       else if (value <= -75) relationshipStatus = 'very negative';
       else if (value <= -25) relationshipStatus = 'negative';
       
-      return `${npcId} (${relationshipStatus}): ${value}`;
+      return `${npcId} (${relationshipStatus}): ${value} - ${npc.description}`;
     })
     .join('\n- ');
 
@@ -113,32 +113,6 @@ In your narrative, suggest when a dice roll might be appropriate by describing t
 
 For example, instead of writing "[DICE_CHECK: Strength check, DC 15]", write something like "The heavy door looks challenging to move. Your strength will be tested if you try to force it open."
 
-EXTREMELY IMPORTANT: NEVER use the internal attribute or skill names (like "social_engineering", "public_appeal", etc.) directly in your narrative. Instead, use natural language descriptions of these abilities. For example, instead of mentioning "public_appeal" attribute, say something like "your ability to appeal to the audience" or "your charisma with the public".
-`;
-
-  // Language and style guidelines
-  const languageStyleInstructions = `
-LANGUAGE AND STYLE GUIDELINES:
-
-1. ${languageInstruction}
-2. Match your tone and style to the theme of the template: "${templateTitle}"
-3. Use vocabulary and expressions appropriate for the scenario and setting.
-4. If the scenario has a specific cultural context (e.g., Asian parenting, corporate setting), use language that reflects this context.
-5. Maintain consistency in language style throughout your responses.
-6. If the player switches languages in their input, adapt and respond in the same language they used.
-`;
-
-  // NPC interaction guidelines
-  const npcInstructions = `
-IMPORTANT NPC GUIDELINES:
-
-1. Include NPCs in your narrative regularly to make the world feel alive and interactive.
-2. NPCs should have consistent personalities based on their descriptions.
-3. When the player interacts with an NPC, consider how the relationship value affects their reaction.
-4. NPCs can provide information, challenges, assistance, or obstacles based on their relationship with the player.
-5. Incorporate NPC relationships meaningfully into the narrative outcomes.
-6. NPCs should react to both successes and failures in ways consistent with their character.
-7. Never mention the numerical relationship values directly - show the relationship through dialogue tone and actions.
 `;
 
   // Add explanation about how dice results affect the narrative
@@ -155,9 +129,64 @@ The degree of success or failure should influence the magnitude of the outcome:
 - Greatly succeeded/failed (6+ from DC): Major effect
 `;
 
-  // Build the complete prompt
-  const prompt = `You are the game master for a D&D-style game called "${state.scenario}".
+  // NPC interaction guidelines
+  const npcInstructions = `
+IMPORTANT NPC GUIDELINES:
 
+1. Include NPCs in your narrative regularly to make the world feel alive and interactive.
+2. NPCs should have consistent personalities based on their descriptions.
+3. When the player interacts with an NPC, consider how the relationship value affects their reaction:
+   - Very Positive (≥75): NPCs are friendly, helpful, and may go out of their way to assist
+   - Positive (≥25): NPCs are generally cooperative and supportive
+   - Neutral (-25 to 25): NPCs maintain a professional or casual attitude
+   - Negative (≤-25): NPCs are unfriendly, skeptical, or resistant
+   - Very Negative (≤-75): NPCs are hostile, may actively oppose or sabotage
+4. NPCs can provide information, challenges, assistance, or obstacles based on their relationship with the player.
+5. Incorporate NPC relationships meaningfully into the narrative outcomes.
+6. NPCs should react to both successes and failures in ways consistent with their character.
+7. Never mention the numerical relationship values directly - show the relationship through dialogue tone and actions.
+8. Consider the NPC's initial description and personality when determining their reactions.
+9. Relationship changes should feel natural and justified by the player's actions.
+10. Significant relationship changes (≥10 points) should be accompanied by noticeable behavioral changes.
+`;
+
+  // Format key events from history
+  const formatKeyEvents = (history: GameHistoryEntry[] = []) => {
+    const keyEvents = history.filter(entry => entry.isKeyEvent);
+    if (keyEvents.length === 0) return 'No significant events have occurred yet.';
+
+    return keyEvents.map(entry => {
+      const eventDetails = [
+        `Turn ${entry.turn}: ${entry.eventDescription || entry.action}`,
+        entry.eventType ? `Type: ${entry.eventType}` : '',
+        entry.relatedNPCs?.length ? `Involved NPCs: ${entry.relatedNPCs.join(', ')}` : '',
+        entry.impact ? 'Impact:' : '',
+        entry.impact?.attributes ? Object.entries(entry.impact.attributes)
+          .map(([attr, value]) => `  - ${attr}: ${value > 0 ? '+' : ''}${value}`)
+          .join('\n') : '',
+        entry.impact?.relationships ? Object.entries(entry.impact.relationships)
+          .map(([npc, value]) => `  - ${npc}: ${value > 0 ? '+' : ''}${value}`)
+          .join('\n') : '',
+        entry.impact?.unlocks?.length ? `  - Unlocked: ${entry.impact.unlocks.join(', ')}` : ''
+      ].filter(Boolean).join('\n');
+
+      return eventDetails;
+    }).join('\n\n');
+  };
+
+  // Build the complete prompt
+  const prompt = `ROLE AND TASK:
+You are the game master for a D&D-style game called "${state.scenario}". Your role is to create an engaging, interactive narrative that responds to player actions while maintaining game mechanics and consistency.
+
+LANGUAGE AND STYLE GUIDELINES:
+1. ${languageInstruction}
+2. Match your tone and style to the theme of the template: "${templateTitle}"
+3. Use vocabulary and expressions appropriate for the scenario and setting.
+4. If the scenario has a specific cultural context (e.g., Asian parenting, corporate setting, anime setting, ancient Chinese setting), use language that reflects this context.
+5. Maintain consistency in language style throughout your responses.
+6. If the player switches languages in their input, adapt and respond in the same language they used.
+
+GAME STATE INFORMATION:
 Current game state:
 - Character Name: ${state.playerName}
 - Customizations:
@@ -176,33 +205,40 @@ ${template.npcs && Object.keys(template.npcs).length > 0
   ? `Available NPCs in this world:\n${availableNPCs}\n` 
   : ''}
 
+KEY EVENTS HISTORY:
+${formatKeyEvents(state.history)}
+
 ${previousInteractionText}
 
 The player has chosen to: ${playerAction}
 
 ${diceRollText}
 
-${languageStyleInstructions}
+GAME MECHANICS AND RULES:
 
+1. Dice Roll System:
 ${diceInstructions}
-
-${npcInstructions}
 
 ${diceResultsExplanation}
 
-Based on this information, narrate what happens next. Include:
-1. The outcome of the player's action, suggesting when a dice roll might be appropriate by describing the challenge narratively
-2. World/NPC reactions and interactions (include at least one NPC in your response)
-3. New information or opportunities
-4. A question or hook for what the player might want to do next
+2. NPC Interaction Rules:
+${npcInstructions}
 
-IMPORTANT: 
+RESPONSE REQUIREMENTS:
+Based on this information, narrate what happens next. Include:
+1. First, describe the current stage/situation before the player's action
+2. Then describe the outcome of the player's action, suggesting when a dice roll might be appropriate by describing the challenge narratively
+3. World/NPC reactions and interactions
+4. New information or opportunities
+5. A question or hook for what the player might want to do next
+
+CRITICAL RULES:
 - NEVER include the [DICE_CHECK] format directly in your response.
-- NEVER use internal attribute or skill names (like "public_appeal", "social_engineering", etc.) in your narrative.
-- Instead, describe these attributes in natural language that fits the story context.
 - This formatting is only for your internal understanding of the game mechanics.
 - Always incorporate NPCs from the available list to create a rich, interactive story.
 - Respond in the language that matches the template title (${isChinese ? 'Chinese' : 'English'}).
+- Reference past key events when relevant to maintain narrative continuity.
+- Consider the impact of previous events on current NPC relationships and world state.
 
 Keep your response engaging, dramatic, and in the style of a D&D Dungeon Master. Respond with 3-4 paragraphs.`;
 

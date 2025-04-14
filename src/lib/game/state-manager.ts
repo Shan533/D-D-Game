@@ -1,4 +1,4 @@
-import { GameState, GameHistoryEntry } from '../../types/game';
+import { GameState, GameHistoryEntry, GameTemplate, NPC } from '../../types/game';
 // Update the import with proper typing
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 import * as supabaseModule from '../supabase/client';
@@ -101,7 +101,8 @@ export const createGameState = async (
   scenario: string,
   startingPoint: string,
   playerCustomizations: Record<string, string>,
-  initialAttributes: Record<string, number>
+  initialAttributes: Record<string, number>,
+  template: GameTemplate
 ): Promise<{ newState: GameState; newSessionId: string }> => {
   // Validate required parameters
   if (!userId) throw new Error('Error creating game state: userId is undefined');
@@ -113,6 +114,16 @@ export const createGameState = async (
   if (!initialAttributes) throw new Error('Error creating game state: initialAttributes is undefined');
   
   try {
+    // Initialize relationships from template NPCs
+    const initialRelationships: Record<string, number> = {};
+    if (template.npcs) {
+      Object.values(template.npcs).forEach((npcGroup: NPC[]) => {
+        npcGroup.forEach((npc: NPC) => {
+          initialRelationships[npc.name] = npc.initialRelationship || 0;
+        });
+      });
+    }
+
     const newState: GameState = {
       userId,
       templateId,
@@ -122,7 +133,7 @@ export const createGameState = async (
       playerName,
       playerCustomizations,
       attributes: initialAttributes,
-      relationships: {},
+      relationships: initialRelationships,
       history: []
     };
 
@@ -133,7 +144,8 @@ export const createGameState = async (
       scenario: scenario.substring(0, 50) + '...',
       startingPoint: startingPoint.substring(0, 50) + '...',
       customizationsCount: Object.keys(playerCustomizations).length,
-      attributesCount: Object.keys(initialAttributes).length
+      attributesCount: Object.keys(initialAttributes).length,
+      relationshipsCount: Object.keys(initialRelationships).length
     });
 
     // Check if Supabase is properly configured and available
@@ -350,7 +362,16 @@ export const addHistoryEntry = async (
   action: string,
   result: string,
   diceRoll?: number,
-  stateChanges?: Record<string, any>
+  stateChanges?: Record<string, any>,
+  isKeyEvent?: boolean,
+  eventType?: 'achievement' | 'relationship' | 'discovery' | 'decision' | 'consequence',
+  eventDescription?: string,
+  relatedNPCs?: string[],
+  impact?: {
+    attributes?: Record<string, number>;
+    relationships?: Record<string, number>;
+    unlocks?: string[];
+  }
 ): Promise<GameState> => {
   try {
     if (!sessionId) {
@@ -372,7 +393,12 @@ export const addHistoryEntry = async (
         modifier: 0,
         total: diceRoll
       } : undefined,
-      stateChanges
+      stateChanges,
+      isKeyEvent,
+      eventType,
+      eventDescription,
+      relatedNPCs,
+      impact
     };
     
     // Add the entry to the state
@@ -422,7 +448,12 @@ export const addHistoryEntry = async (
             turn_number: state.turn + 1,
             action,
             result,
-            state_changes: stateChanges || null
+            state_changes: stateChanges || null,
+            is_key_event: isKeyEvent || false,
+            event_type: eventType || null,
+            event_description: eventDescription || null,
+            related_npcs: relatedNPCs || null,
+            impact: impact || null
           });
         
         if (historyError) {

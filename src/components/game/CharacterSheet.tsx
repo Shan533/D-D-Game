@@ -85,7 +85,6 @@ export default function CharacterSheet() {
         </CardContent>
       </Card>
       
-      {/* TODO: Add relationships to the character sheet. */}
       {/* Relationships (if applicable) */}
       {gameState.relationships && Object.keys(gameState.relationships).length > 0 && (
         <Card className="game-card">
@@ -94,21 +93,39 @@ export default function CharacterSheet() {
           </CardHeader>
           <CardContent className="space-y-3">
             {Object.entries(gameState.relationships).map(([npcId, value]) => {
+              // Find NPC description from template
+              const npcDescription = template.npcs ? 
+                Object.values(template.npcs)
+                  .flat()
+                  .find(npc => npc.name === npcId)?.description || '' : '';
+              
               // Calculate relationship level (0-100 scale)
               const level = Math.max(0, Math.min(100, value));
               const percentage = `${level}%`;
               
-              // Determine color
-              let color;
-              if (level < 33) color = 'bg-red-500';
-              else if (level < 66) color = 'bg-[var(--game-mint)]';
-              else color = 'bg-[var(--game-button-primary)]';
+              // Determine relationship status and color
+              let status = 'Neutral';
+              let color = 'bg-[var(--game-mint)]';
+              
+              if (level >= 75) {
+                status = 'Very Positive';
+                color = 'bg-[var(--game-button-primary)]';
+              } else if (level >= 25) {
+                status = 'Positive';
+                color = 'bg-[var(--game-button-primary)] opacity-75';
+              } else if (level <= -75) {
+                status = 'Very Negative';
+                color = 'bg-red-500';
+              } else if (level <= -25) {
+                status = 'Negative';
+                color = 'bg-red-500 opacity-75';
+              }
               
               return (
-                <div key={npcId} className="space-y-1">
+                <div key={npcId} className="space-y-2">
                   <div className="flex justify-between text-sm text-[var(--game-text-primary)]">
-                    <span>{npcId}</span>
-                    <span>{level}/100</span>
+                    <span className="font-medium">{npcId}</span>
+                    <span className="text-[var(--game-text-secondary)]">{status}</span>
                   </div>
                   <div className="h-2 bg-[var(--game-bg-secondary)] rounded-full overflow-hidden">
                     <div 
@@ -116,6 +133,9 @@ export default function CharacterSheet() {
                       style={{ width: percentage }}
                     />
                   </div>
+                  {npcDescription && (
+                    <p className="text-xs text-[var(--game-text-secondary)]">{npcDescription}</p>
+                  )}
                 </div>
               );
             })}
