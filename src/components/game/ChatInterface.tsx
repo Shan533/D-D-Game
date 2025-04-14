@@ -80,40 +80,12 @@ export default function ChatInterface() {
       };
     }) : [];
   
-  // Get attribute badge color based on attribute key
+  // Get attribute badge color
   const getAttributeBadgeColors = (attributeKey: string) => {
-    const colorMap: Record<string, { bg: string, text: string }> = {
-      // Academic attributes
-      'intelligence': { bg: 'bg-blue-100', text: 'text-blue-800' },
-      'academic_pressure': { bg: 'bg-blue-100', text: 'text-blue-800' },
-      
-      // Creative attributes
-      'creativity': { bg: 'bg-purple-100', text: 'text-purple-800' },
-      
-      // Social attributes
-      'social_engineering': { bg: 'bg-pink-100', text: 'text-pink-800' },
-      
-      // Discipline attributes
-      'tiger_discipline': { bg: 'bg-orange-100', text: 'text-orange-800' },
-      'conformity': { bg: 'bg-orange-100', text: 'text-orange-800' },
-      
-      // Emotional attributes
-      'emotional_tactics': { bg: 'bg-red-100', text: 'text-red-800' },
-      
-      // Resource attributes
-      'resource_management': { bg: 'bg-green-100', text: 'text-green-800' },
-      
-      // Honor attributes
-      'family_honor': { bg: 'bg-amber-100', text: 'text-amber-800' },
-      
-      // Rebellion attributes
-      'rebellion': { bg: 'bg-indigo-100', text: 'text-indigo-800' },
-      
-      // Default
-      'default': { bg: 'bg-slate-100', text: 'text-slate-800' }
+    return {
+      bg: 'bg-slate-100',
+      text: 'text-slate-800'
     };
-    
-    return colorMap[attributeKey] || colorMap['default'];
   };
   
   // TODO: Add logic for the success chance.
@@ -306,7 +278,7 @@ export default function ChatInterface() {
                     <div className="flex justify-between items-start mb-1">
                       <p className="font-medium text-sm">{skill.name}</p>
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${getAttributeBadgeColors(skill.attributeKey).bg} ${getAttributeBadgeColors(skill.attributeKey).text}`}>
-                        {skill.attributeName}: {skill.attributeValue}
+                        {skill.attributeKey}: {skill.attributeValue}
                       </span>
                     </div>
                     <p className="text-xs text-[var(--game-text-secondary)] mb-2">{skill.description}</p>
@@ -341,7 +313,7 @@ export default function ChatInterface() {
                       <Button 
                         onClick={() => setDiceValue(null)} 
                         size="sm" 
-                        className="ml-2 bg-[var(--game-bg-accent)] hover:bg-[var(--game-divider)] text-[var(--game-text-primary)]"
+                        className="ml-2 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
                       >
                         Reset
                       </Button>
@@ -358,7 +330,7 @@ export default function ChatInterface() {
               <div className="flex justify-between mt-4">
                 <Button
                   type="button"
-                  className="bg-[var(--game-bg-secondary)] hover:bg-[var(--game-bg-accent)] text-[var(--game-text-primary)] transition-all duration-200 flex-1 mr-2"
+                  className="!bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)] flex-1 mr-2"
                   onClick={() => {
                     setSelectedSkill(null);
                     setShowDice(false);
@@ -414,7 +386,7 @@ export default function ChatInterface() {
                       )}
                     </div>
                     <Button
-                      className="bg-[var(--game-button-secondary)] hover:bg-[var(--game-button-secondary-hover)] text-white transition-all duration-300 px-3"
+                      className="!bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
                       size="sm"
                       onClick={() => {
                         setSelectedSkill(null);
@@ -442,7 +414,7 @@ export default function ChatInterface() {
                             <Button 
                               onClick={() => setDiceValue(null)} 
                               size="sm" 
-                              className="ml-2 bg-[var(--game-bg-accent)] hover:bg-[var(--game-divider)] text-[var(--game-text-primary)]"
+                              className="ml-2 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
                             >
                               Reset
                             </Button>

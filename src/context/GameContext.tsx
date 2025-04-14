@@ -246,7 +246,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         loadedTemplate.scenario,
         loadedTemplate.startingPoint,
         customizations,
-        initialAttributes
+        initialAttributes,
+        loadedTemplate
       );
       
       // Store the session ID in localStorage to persist across navigation
@@ -392,6 +393,11 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Build the prompt for the AI
       const prompt = buildGamePrompt(template, state, playerAction, diceRoll);
+      
+      // DEBUGGING: Log the prompt for debugging
+      console.log('=== AI Prompt ===');
+      console.log(prompt);
+      console.log('================');
       
       // Call the OpenAI API through our client
       const response = await openaiClient.generateResponse({

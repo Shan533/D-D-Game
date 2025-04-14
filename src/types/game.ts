@@ -83,6 +83,15 @@ export interface GameHistoryEntry {
   };
   stateChanges?: Record<string, any>;
   timestamp: string;
+  isKeyEvent?: boolean;
+  eventType?: 'achievement' | 'relationship' | 'discovery' | 'decision' | 'consequence';
+  eventDescription?: string;
+  relatedNPCs?: string[];
+  impact?: {
+    attributes?: Record<string, number>;
+    relationships?: Record<string, number>;
+    unlocks?: string[];
+  };
 }
 
 export interface GameState {
@@ -105,6 +114,5 @@ export interface GameState {
   }>;
   unlockedAchievements?: string[];
   history?: GameHistoryEntry[];
-  // Internal flag to track source of the game state
   _loadedFromLocalStorage?: boolean;
 } 

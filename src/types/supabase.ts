@@ -75,7 +75,12 @@ export interface Database {
           action: string;
           result: string;
           state_changes: Json | null;
-          timestamp: string;
+          is_key_event: boolean;
+          event_type: string | null;
+          event_description: string | null;
+          related_npcs: string[] | null;
+          impact: Json | null;
+          created_at: string;
         };
         Insert: {
           id?: string;
@@ -84,7 +89,12 @@ export interface Database {
           action: string;
           result: string;
           state_changes?: Json | null;
-          timestamp?: string;
+          is_key_event?: boolean;
+          event_type?: string | null;
+          event_description?: string | null;
+          related_npcs?: string[] | null;
+          impact?: Json | null;
+          created_at?: string;
         };
         Update: {
           id?: string;
@@ -93,7 +103,12 @@ export interface Database {
           action?: string;
           result?: string;
           state_changes?: Json | null;
-          timestamp?: string;
+          is_key_event?: boolean;
+          event_type?: string | null;
+          event_description?: string | null;
+          related_npcs?: string[] | null;
+          impact?: Json | null;
+          created_at?: string;
         };
       };
       achievements: {
