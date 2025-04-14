@@ -66,13 +66,13 @@ export default function CharacterSheet() {
           <CardTitle className="text-base text-[var(--game-text-primary)]">Attributes</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
-          {Object.entries(template.attributes).map(([attrKey, attrName]) => (
+          {Object.entries(template.attributes).map(([attrKey, attrDesc]) => (
             <div 
               key={attrKey}
               className="flex items-center p-2 rounded-md game-attribute"
             >
               <div className="flex-grow">
-                <div className="font-medium text-[var(--game-text-primary)]">{attrName}</div>
+                <div className="font-medium text-[var(--game-text-primary)]">{attrKey}</div>
                 <div className="text-sm text-[var(--game-text-secondary)]">
                   Base: {gameState.attributes[attrKey] || 0}
                 </div>
@@ -85,7 +85,7 @@ export default function CharacterSheet() {
         </CardContent>
       </Card>
       
-      // TODO: Add relationships to the character sheet.
+      {/* TODO: Add relationships to the character sheet. */}
       {/* Relationships (if applicable) */}
       {gameState.relationships && Object.keys(gameState.relationships).length > 0 && (
         <Card className="game-card">
