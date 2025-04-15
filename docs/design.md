@@ -38,11 +38,15 @@ interface GameState {
   scenario: string;                                    // Game scenario
   currentScene: string;                                // Current scene
   turn: number;                                        // Current turn
+  currentStageId: string;                              // Current game stage ID
   
   // Character State
   playerName: string;                                  // Player name
   playerCustomizations: Record<string, string>;        // Player's chosen customization options
   attributes: Record<string, number>;                  // Current attribute values
+  
+  // Stage Progress
+  completedGoals: Record<string, string[]>;            // Completed goals by stage ID
   
   // Extended State (Optional)
   relationships?: Record<string, number>;              // Relationships with NPCs
@@ -103,6 +107,56 @@ Progress tracking for chain conditions
 Unlockable achievements based on game outcomes and player choices
 Rewards for achievement completion
 Tracking for replay value
+
+7. Stage Progression System
+The game is structured into distinct stages (e.g., "initial_audition", "group_performance") that provide:
+- Clear narrative progression and a sense of advancement
+- Specific goals and objectives for each stage of the game
+- Completion conditions based on attribute levels and goal completion
+- Rewards for completing stages (attribute bonuses, skill unlocks)
+- Context for AI storytelling to follow a coherent narrative arc
+
+Stage structure in templates:
+```json
+"stages": {
+  "stage_id": {
+    "name": "Human-readable Stage Name",
+    "description": "Description of this stage's narrative context",
+    "goals": [
+      {
+        "id": "goal_id",
+        "name": "Goal Name",
+        "description": "What the player needs to accomplish",
+        "requirements": {
+          "attribute1": 3,  // Minimum attribute values needed
+          "attribute2": 2
+        }
+      }
+    ],
+    "completion_conditions": {
+      "min_goals_completed": 1,  // Minimum number of goals to complete
+      "min_attributes": {        // Minimum attributes needed
+        "attribute1": 3,
+        "attribute2": 2
+      }
+    },
+    "rewards": {
+      "attribute_bonus": {       // Attributes to increase upon completion
+        "attribute1": 1
+      },
+      "unlock_skills": ["skill_id"] // Skills to unlock upon completion
+    }
+  }
+}
+```
+
+Stage Progression Logic:
+- The game tracks the current stage ID in the game state
+- After each player action, the system checks if completion conditions are met
+- When conditions are met, rewards are applied and the game advances to the next stage
+- The AI is informed of stage transitions to maintain narrative coherence
+- Stage completion can trigger special events or narrative moments
+
 Database Schema (Supabase)
 -- Users table
 CREATE TABLE users (
@@ -152,6 +206,7 @@ Player action/choice
 Template context
 Relevant history
 Dice roll results
+Stage information and goals
 Example prompt structure:
 You are the game master for a D&D-style game called "{scenario}".
 
@@ -162,17 +217,73 @@ Current game state:
 - Active effects: {activeSpecialSkills}
 - Relationships: {key relationships}
 
+Current Stage: {stageName} - {stageDescription}
+Stage Goals:
+- {goal1Name}: {goal1Description} (Requires: {attributeRequirements})
+- {goal2Name}: {goal2Description} (Requires: {attributeRequirements})
+
 The player has chosen to: {playerAction}
 
 Three dice were rolled with the following results: [{dice1}, {dice2}, {dice3}]
 {If all dice match: "SPECIAL EVENT TRIGGERED! All dice showing {matchedValue}"}
 {If dice don't match: "Regular roll with a sum of {total} (Modified by {attributeValue} for a final total of {finalTotal})"}
 
+{If stage transition: "The player has completed the '{previousStageName}' stage and is now entering the '{newStageName}' stage. This new stage is about {newStageDescription}"}
+
 Based on this information, narrate what happens next. Include:
 1. The outcome of the player's action
 2. World/NPC reactions
 3. New information or opportunities
 4. A question or hook for what the player might want to do next
+5. If this is a stage transition, describe how the world/story changes as they enter the new stage
+
+AI Integration with Stage System
+=================================
+
+The AI integration with the stage system is crucial for creating a narratively coherent and progressively challenging gameplay experience. The integration works as follows:
+
+1. **Stage Awareness in Prompts**
+   - Each AI prompt includes the current stage information
+   - Stage goals are explicitly included to guide AI responses
+   - AI is made aware of player's progress toward goals
+
+2. **Narrative Consistency**
+   - AI maintains consistent themes appropriate to the current stage
+   - Character development and plot advancement align with stage progression
+   - Stage transitions are treated as significant narrative moments
+
+3. **Goal-Oriented Storytelling**
+   - AI subtly guides players toward stage goals without forcing actions
+   - AI acknowledges when players make progress toward stage goals
+   - AI provides appropriate challenges that test required attributes
+
+4. **Stage Transition Handling**
+   - When a stage is completed, the AI receives special instructions
+   - Transition moments are presented as significant achievements
+   - New stage introduction establishes the tone and expectations
+
+5. **Adaptive Difficulty**
+   - AI adjusts challenges based on player's current attribute levels
+   - If player is struggling with stage goals, AI provides hints or easier paths
+   - If player is excelling, AI can increase narrative complexity
+
+Example Stage Transition Prompt Addition:
+```
+STAGE TRANSITION NOTICE:
+The player has completed the "initial_audition" stage by achieving the "impress_mentors" goal.
+They are now entering the "group_performance" stage.
+
+Required narrative elements for this transition:
+1. Acknowledge their achievement in the initial audition
+2. Introduce the concept of group performances
+3. Establish new challenges (team dynamics, more complex choreography)
+4. Introduce at least one new NPC from their assigned group
+5. Create tension appropriate to this new stage
+
+The player's strongest attributes are now 颜值 (5) and 舞蹈 (4), while their weakest is 公司资源 (2).
+```
+
+The AI should incorporate this information naturally into its narrative, creating a sense of progression and accomplishment while setting up new challenges appropriate to the new stage.
 
 Implementation Plan
 Phase 1 (1 day) - Core Functionality

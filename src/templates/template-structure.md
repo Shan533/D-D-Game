@@ -97,6 +97,130 @@ Define non-player characters in the game world:
 }
 ```
 
+### Stages (Optional)
+
+Define distinct narrative stages with goals, conditions, and rewards:
+
+```
+"stages": {
+  "stage_id": {
+    "name": "Human-readable Stage Name",
+    "description": "Description of this stage's narrative context",
+    "goals": [
+      {
+        "id": "goal_id",
+        "name": "Goal Name",
+        "description": "What the player needs to accomplish",
+        "requirements": {
+          "attribute1": 3,  // Minimum attribute values needed
+          "attribute2": 2
+        }
+      }
+    ],
+    "completion_conditions": {
+      "min_goals_completed": 1,  // Minimum number of goals to complete
+      "min_attributes": {        // Minimum attributes needed
+        "attribute1": 3,
+        "attribute2": 2
+      }
+    },
+    "rewards": {
+      "attribute_bonus": {       // Attributes to increase upon completion
+        "attribute1": 1
+      },
+      "unlock_skills": ["skill_id"] // Skills to unlock upon completion
+    }
+  }
+}
+```
+
+#### Stage Structure Details
+
+- **stage_id**: Unique identifier for the stage (e.g., "initial_audition")
+- **name**: Human-readable name shown to players
+- **description**: Narrative context for this stage of the game
+- **goals**: Array of accomplishment objectives
+  - **id**: Unique identifier for the goal
+  - **name**: Short display name
+  - **description**: Detailed description of what to accomplish
+  - **requirements**: Attribute thresholds needed to complete this goal
+- **completion_conditions**: Criteria to advance to the next stage
+  - **min_goals_completed**: Minimum number of goals player must complete
+  - **min_attributes**: Minimum attribute levels required
+- **rewards**: Benefits gained upon completing this stage
+  - **attribute_bonus**: Attribute increases
+  - **unlock_skills**: New skills made available to the player
+
+#### Multiple-Stage Example
+
+```json
+"stages": {
+  "introduction": {
+    "name": "Introduction",
+    "description": "Your first day at the White House",
+    "goals": [
+      {
+        "id": "meet_president",
+        "name": "Meet the President",
+        "description": "Successfully introduce yourself to the President",
+        "requirements": {
+          "charisma": 2,
+          "intelligence": 3
+        }
+      },
+      {
+        "id": "learn_protocols",
+        "name": "Learn Protocols",
+        "description": "Understand basic White House protocols",
+        "requirements": {
+          "intelligence": 4
+        }
+      }
+    ],
+    "completion_conditions": {
+      "min_goals_completed": 1,
+      "min_attributes": {
+        "charisma": 2
+      }
+    },
+    "rewards": {
+      "attribute_bonus": {
+        "credibility": 1
+      },
+      "unlock_skills": ["basic_diplomacy"]
+    }
+  },
+  "first_crisis": {
+    "name": "First Crisis",
+    "description": "Handle your first international incident",
+    "goals": [
+      {
+        "id": "brief_president",
+        "name": "Brief the President",
+        "description": "Successfully explain the situation to the President",
+        "requirements": {
+          "intelligence": 5,
+          "credibility": 3
+        }
+      }
+    ],
+    "completion_conditions": {
+      "min_goals_completed": 1,
+      "min_attributes": {
+        "intelligence": 4,
+        "credibility": 3
+      }
+    },
+    "rewards": {
+      "attribute_bonus": {
+        "influence": 2
+      },
+      "unlock_skills": ["crisis_management"]
+    }
+  }
+}
+```
+
 ## Example
 
 See existing templates like `helicopter-parent.json` or `white-house.json` for complete examples.
@@ -174,4 +298,4 @@ Define events that trigger when all three dice match:
 }
 ```
 
-Refer to the game design documentation for details on implementing these features. 
+Refer to the game design documentation for details on implementing these features.
