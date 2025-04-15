@@ -16,7 +16,7 @@ export function SingleDice({
   size = 'md', 
   animate = true,
   value: initialValue,
-  maxValue = 2, // Now using 6-sided dice by default
+  maxValue = 6, // Now using 6-sided dice by default
   onRollComplete,
   delay = 0
 }: SingleDiceProps) {

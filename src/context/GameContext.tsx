@@ -405,7 +405,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       modifier?: number;
       total?: number;
     }
-  ): Promise<string> => {
+  ): Promise<{ aiText: string; calculatedState: GameState }> => {
     try {
       // Build the prompt for the AI
       const prompt = buildGamePrompt(template, state, playerAction, diceRoll);
@@ -427,57 +427,52 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       const aiText = response.text;
-      setAiResponse(aiText);
+      // Only set the AI response text here, not the full game state yet
+      setAiResponse(aiText); 
       
-      // Process stat changes from AI response
       const statsMatch = aiText.match(/\[STATS\]([\s\S]*?)\[\/STATS\]/);
-      let updatedState: GameState = { ...state };
+      let updatedState: GameState = { ...state }; // Start with the current state
 
-      // Apply special event effects if applicable
+      // Apply special event effects first if applicable
       if (diceRoll?.isSpecialEvent && diceRoll.specialEventName && template.specialDiceEvents) {
         console.log("Applying special event effects:", diceRoll.specialEventName);
-        // Create a changes object for special event effects
         const specialEventChanges = {
           attributes: template.specialDiceEvents[diceRoll.specialEventName].effect || {},
-          relationships: {} // Empty relationships as special events only affect attributes
+          relationships: {} 
         };
-        // Apply special event changes first
         updatedState = stateManager.applyStatsChanges(updatedState, specialEventChanges);
       }
 
-      // Then apply stats changes from AI response
+      // Then apply stats changes from AI response to the potentially modified state
       if (statsMatch) {
         const statsText = statsMatch[1];
         const changes = stateManager.parseStatsChanges(statsText);
         updatedState = stateManager.applyStatsChanges(updatedState, changes);
       }
       
-      // Update game state with the AI response
+      // Update scene and turn based on the derived state
       updatedState = {
         ...updatedState,
-        currentScene: aiText,
+        currentScene: aiText, // Use the raw AI text for the scene
         turn: state.turn + 1
       };
       
-      // Force a state update by creating a new object
-      const finalState = {
+      // Create final state object ensuring deep copies for reactivity
+      const finalCalculatedState: GameState = {
         ...updatedState,
+        attributes: { ...updatedState.attributes },
         relationships: { ...updatedState.relationships },
-        attributes: { ...updatedState.attributes }
+        // Ensure history is copied if it exists, otherwise initialize
+        history: state.history ? [...state.history] : [] 
       };
       
-      setGameState(finalState);
-      
-      // Save game state if we have a session ID
-      if (sessionId) {
-        await stateManager.saveGameState(sessionId, finalState);
-      }
-      
-      return aiText;
+      // Return both the text and the calculated state
+      return { aiText, calculatedState: finalCalculatedState }; 
     } catch (error) {
       const errorMessage = `Error generating AI response: ${(error as Error).message}`;
       setError(errorMessage);
-      return errorMessage;
+      // Return error message and original state on failure
+      return { aiText: errorMessage, calculatedState: state }; 
     }
   };
 
@@ -553,86 +548,72 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     setError(null);
 
     try {
-      // Check if all dice values match (special event condition)
       const isSpecialEvent = diceRollValues && 
                             diceRollValues.length === 3 && 
                             diceRollValues[0] === diceRollValues[1] && 
                             diceRollValues[1] === diceRollValues[2];
       
-      // Get special event details if there's a match
       let specialEvent = null;
       if (isSpecialEvent && template.specialDiceEvents) {
         const matchedValue = diceRollValues![0].toString();
         specialEvent = template.specialDiceEvents[matchedValue];
       }
 
-      // Generate AI response
-      const aiResponseText = await generateAIResponse(
+      // Store dice result in state if we have dice values
+      if (diceRollValues && diceRollValues.length > 0) {
+        const diceSum = diceRollValues.reduce((sum, val) => sum + val, 0);
+        setDiceResult({
+          values: diceRollValues,
+          isMatch: isSpecialEvent || false,
+          matchedValue: isSpecialEvent ? diceRollValues[0] : undefined,
+          sum: diceSum,
+          modifier: 0,
+          total: diceSum,
+          specialEvent: isSpecialEvent && specialEvent ? {
+            name: specialEvent.name,
+            description: specialEvent.description,
+            effects: specialEvent.effect || {}
+          } : undefined,
+          success: undefined
+        });
+      }
+
+      // Format dice roll information for AI prompt
+      const diceRollInfo = diceRollValues ? {
+        values: diceRollValues,
+        isSpecialEvent: isSpecialEvent,
+        specialEventName: specialEvent?.name,
+        specialEventDescription: specialEvent?.description,
+        sum: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0),
+        modifier: 0,
+        total: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0)
+      } : undefined;
+
+      // Generate AI response with current state
+      const { aiText, calculatedState } = await generateAIResponse(
         template,
         gameState,
         action,
-        diceRollValues ? {
-          values: diceRollValues,
-          isSpecialEvent: isSpecialEvent,
-          specialEventName: specialEvent?.name,
-          specialEventDescription: specialEvent?.description,
-          sum: isSpecialEvent ? 0 : diceResult?.sum, // Sum is not relevant for special events
-          modifier: isSpecialEvent ? 0 : (diceResult?.modifier || 0),
-          total: isSpecialEvent ? 0 : diceResult?.total
-        } : undefined
+        diceRollInfo
       );
 
-      // Process stat changes from AI response
-      const statsMatch = aiResponseText.match(/\[STATS\]([\s\S]*?)\[\/STATS\]/);
-      let updatedState: GameState = { ...gameState };
-
-      // Apply special event effects if applicable
-      if (isSpecialEvent && specialEvent?.effect) {
-        console.log("Applying special event effects:", specialEvent.name);
-        // Create a changes object for special event effects
-        const specialEventChanges = {
-          attributes: specialEvent.effect,
-          relationships: {} // Empty relationships as special events only affect attributes
-        };
-        // Apply special event changes first
-        updatedState = stateManager.applyStatsChanges(updatedState, specialEventChanges);
-      }
-
-      // Then apply stats changes from AI response
-      if (statsMatch) {
-        const statsText = statsMatch[1];
-        const changes = stateManager.parseStatsChanges(statsText);
-        updatedState = stateManager.applyStatsChanges(updatedState, changes);
-      }
-
-      // Update game state with the AI response
-      updatedState = {
-        ...updatedState,
-        currentScene: aiResponseText,
-        turn: gameState.turn + 1
-      };
-
-      // Force a state update by creating a new object
-      const finalState = {
-        ...updatedState,
-        relationships: { ...updatedState.relationships },
-        attributes: { ...updatedState.attributes }
-      };
-
-      // Add history entry with the updated state
+      // Add history entry using the state returned by generateAIResponse
       const stateWithHistory = await stateManager.addHistoryEntry(
         sessionId,
-        finalState,
+        calculatedState,
         action,
-        aiResponseText,
+        aiText,
         diceRollValues ? diceRollValues[0] : undefined
       );
 
+      // Set the final state after history is added
       setGameState(stateWithHistory);
 
-      // Save game state
+      // Save the final state
       await stateManager.saveGameState(sessionId, stateWithHistory);
+
     } catch (error) {
+      console.error("Error in performAction:", error);
       setError((error as Error).message);
     } finally {
       setLoading(false);
