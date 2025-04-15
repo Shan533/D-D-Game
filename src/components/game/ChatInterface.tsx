@@ -7,6 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DiceRoller, { Dice } from '@/components/game/DiceRoller';
 
+// Function to remove [STATS] blocks from AI responses
+const cleanResponse = (response: string): string => {
+  return response.replace(/\[STATS\][\s\S]*?\[\/STATS\]/g, '');
+};
+
 export default function ChatInterface() {
   const [action, setAction] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
@@ -33,6 +38,9 @@ export default function ChatInterface() {
   useEffect(() => {
     if (!aiResponse) return;
     
+    // Clean the AI response to remove [STATS] blocks
+    const cleanedResponse = cleanResponse(aiResponse);
+    
     let currentText = '';
     let currentIndex = 0;
     setIsTyping(true);
@@ -42,8 +50,8 @@ export default function ChatInterface() {
     
     // Add characters one by one with a slight delay
     const typingInterval = setInterval(() => {
-      if (currentIndex < aiResponse.length) {
-        currentText += aiResponse[currentIndex];
+      if (currentIndex < cleanedResponse.length) {
+        currentText += cleanedResponse[currentIndex];
         setDisplayedText(currentText);
         currentIndex++;
       } else {
@@ -149,7 +157,8 @@ export default function ChatInterface() {
   
   const skipTypingEffect = () => {
     if (isTyping && aiResponse) {
-      setDisplayedText(aiResponse);
+      // Clean the response when skipping the typing effect too
+      setDisplayedText(cleanResponse(aiResponse));
       setIsTyping(false);
     }
   };
