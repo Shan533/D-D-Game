@@ -68,10 +68,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-900">
+    <div className="game-container min-h-screen flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mb-4 flex justify-start">
         <Link href="/">
-          <Button variant="ghost" className="px-2 py-1 flex items-center">
+          <Button variant="ghost" className="game-button-secondary px-2 py-1 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
@@ -80,17 +80,17 @@ export default function LoginPage() {
         </Link>
       </div>
       
-      <Card className="max-w-md w-full">
+      <Card className="game-card max-w-md w-full">
         <form onSubmit={handleSubmit}>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-[var(--game-text-primary)]">Sign In</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl game-header">Sign In</CardTitle>
+            <CardDescription className="text-[var(--game-text-secondary)]">
               Sign in to continue your adventure
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium">
+              <label htmlFor="email" className="block text-sm font-medium text-[var(--game-text-primary)]">
                 Email
               </label>
               <Input
@@ -101,11 +101,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="your.email@example.com"
+                className="game-input"
               />
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="password" className="block text-sm font-medium">
+              <label htmlFor="password" className="block text-sm font-medium text-[var(--game-text-primary)]">
                 Password
               </label>
               <Input
@@ -116,17 +117,18 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
+                className="game-input"
               />
             </div>
             
             {errorMessage && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-300 rounded-md text-sm">
+              <div className="p-3 bg-red-50 text-red-600 rounded-md text-sm border border-red-200">
                 {errorMessage}
               </div>
             )}
             
             {successMessage && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300 rounded-md text-sm">
+              <div className="p-3 bg-[var(--game-mint-light)] text-[var(--game-text-accent)] rounded-md text-sm border border-[var(--game-mint)]">
                 {successMessage}
               </div>
             )}
@@ -134,15 +136,15 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col">
             <Button
               type="submit"
-              className="w-full"
+              className="game-button-primary w-full"
               disabled={loading}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
             
-            <p className="mt-4 text-center text-sm">
+            <p className="mt-4 text-center text-sm text-[var(--game-text-secondary)]">
               Don't have an account?{' '}
-              <Link href="/register" className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+              <Link href="/register" className="text-[var(--game-text-accent)] hover:underline">
                 Sign up here
               </Link>
             </p>
