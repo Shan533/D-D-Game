@@ -37,6 +37,12 @@ export interface GameEvent {
   outcomes: Record<string, any>;
 }
 
+export interface SpecialDiceEvent {
+  name: string;
+  description: string;
+  effect: Record<string, number>;
+}
+
 export interface Template {
   metadata: TemplateMetadata;
   scenario: string;
@@ -46,4 +52,5 @@ export interface Template {
   playerCustomizations: Record<string, Customization>;
   npcs?: Record<string, NPC[]>;
   events?: Record<string, GameEvent>;
+  specialDiceEvents?: Record<string, SpecialDiceEvent>;
 } 

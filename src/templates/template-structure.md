@@ -117,5 +117,61 @@ Templates can also include:
 - Location-specific content
 - Achievement systems
 - Relationship mechanics
+- Special dice events
+
+### Special Dice Events
+
+Define events that trigger when all three dice match:
+
+```
+"specialDiceEvents": {
+  "1": {
+    "name": "Terrible Misfortune",
+    "description": "A particularly unlucky outcome",
+    "effect": {
+      "attribute_key": -2, // Negative impact on attributes
+      "another_attribute": -1
+    }
+  },
+  "2": {
+    "name": "Minor Setback",
+    "description": "Something unexpected goes wrong",
+    "effect": {
+      "attribute_key": -1
+    }
+  },
+  "3": {
+    "name": "Strange Coincidence",
+    "description": "Something unusual but neither good nor bad happens",
+    "effect": {
+      "attribute_key": 0,
+      "another_attribute": 0
+    }
+  },
+  "4": {
+    "name": "Unexpected Assistance",
+    "description": "Someone or something provides unexpected help",
+    "effect": {
+      "attribute_key": 1
+    }
+  },
+  "5": {
+    "name": "Lucky Break",
+    "description": "Something fortunate happens unexpectedly",
+    "effect": {
+      "attribute_key": 1,
+      "another_attribute": 1
+    }
+  },
+  "6": {
+    "name": "Extraordinary Success",
+    "description": "An extremely fortunate outcome beyond expectations",
+    "effect": {
+      "attribute_key": 2,
+      "another_attribute": 1
+    }
+  }
+}
+```
 
 Refer to the game design documentation for details on implementing these features. 

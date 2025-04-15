@@ -6,7 +6,7 @@ import { GameState, GameTemplate } from '../types/game';
 import { Template } from '../types/template';
 import * as stateManager from '../lib/game/state-manager';
 import * as templateLoader from '../lib/game/template-loader';
-import { rollD20, calculateTotal } from '../lib/game/dice';
+import { rollTripleDice, calculateDiceSum, calculateTotal, checkTripleMatch, getSpecialEventDescription, getSpecialEventEffects } from '../lib/game/dice';
 import { buildGamePrompt } from '../lib/game/prompt-builder';
 import openaiClient from '../lib/openai/client';
 import { useAuth } from './AuthContext';
@@ -21,9 +21,17 @@ interface GameContextType {
   sessionId: string | null;
   aiResponse: string | null;
   diceResult: {
-    roll: number;
+    values: number[];
+    isMatch: boolean;
+    matchedValue?: number;
+    sum: number;
     modifier: number;
     total: number;
+    specialEvent?: {
+      name: string;
+      description: string;
+      effects: Record<string, number>;
+    };
     success?: boolean;
   } | null;
 
@@ -38,8 +46,8 @@ interface GameContextType {
   endGame: () => Promise<void>;
 
   // Gameplay
-  performAction: (action: string, diceRollValue?: number) => Promise<void>;
-  rollDiceForSkill: (skill: string) => Promise<number>;
+  performAction: (action: string, diceRollValues?: number[]) => Promise<void>;
+  rollDiceForSkill: (skill: string) => Promise<number[]>;
   clearDiceResult: () => void;
 }
 
@@ -60,7 +68,7 @@ const initialContext: GameContextType = {
   saveGame: async () => {},
   endGame: async () => {},
   performAction: async () => {},
-  rollDiceForSkill: async () => 0,
+  rollDiceForSkill: async () => [],
   clearDiceResult: () => {},
 };
 
@@ -388,7 +396,15 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     template: GameTemplate,
     state: GameState,
     playerAction: string,
-    diceRoll?: { roll: number; attributeModifier?: number; total?: number }
+    diceRoll?: { 
+      values: number[]; 
+      isSpecialEvent?: boolean;
+      specialEventName?: string;
+      specialEventDescription?: string;
+      sum?: number;
+      modifier?: number;
+      total?: number;
+    }
   ): Promise<string> => {
     try {
       // Build the prompt for the AI
@@ -416,21 +432,23 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       // Process stat changes from AI response
       const statsMatch = aiText.match(/\[STATS\]([\s\S]*?)\[\/STATS\]/);
       let updatedState: GameState = { ...state };
-      
+
+      // Apply special event effects if applicable
+      if (diceRoll?.isSpecialEvent && diceRoll.specialEventName && template.specialDiceEvents) {
+        console.log("Applying special event effects:", diceRoll.specialEventName);
+        // Create a changes object for special event effects
+        const specialEventChanges = {
+          attributes: template.specialDiceEvents[diceRoll.specialEventName].effect || {},
+          relationships: {} // Empty relationships as special events only affect attributes
+        };
+        // Apply special event changes first
+        updatedState = stateManager.applyStatsChanges(updatedState, specialEventChanges);
+      }
+
+      // Then apply stats changes from AI response
       if (statsMatch) {
         const statsText = statsMatch[1];
-        
-        // Parse and apply the changes
         const changes = stateManager.parseStatsChanges(statsText);
-        
-        // Create new objects for attributes and relationships to ensure React detects changes
-        updatedState = {
-          ...updatedState,
-          attributes: { ...updatedState.attributes },
-          relationships: { ...updatedState.relationships }
-        };
-        
-        // Apply the changes to the new state objects
         updatedState = stateManager.applyStatsChanges(updatedState, changes);
       }
       
@@ -463,7 +481,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const rollDiceForSkill = async (skillName: string): Promise<number> => {
+  const rollDiceForSkill = async (skillName: string): Promise<number[]> => {
     if (!template || !gameState) {
       throw new Error('No active game');
     }
@@ -487,22 +505,45 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     // Calculate modifier (simplified: attribute value / 5, rounded down)
     const modifier = Math.floor(attributeValue / 5);
     
-    // Roll dice
-    const roll = rollD20();
-    const total = calculateTotal(roll, modifier);
+    // Roll three dice
+    const values = rollTripleDice();
+    const isMatch = checkTripleMatch(values);
+    const matchedValue = isMatch ? values[0] : undefined;
+    const sum = calculateDiceSum(values);
+    const total = calculateTotal(sum, modifier);
     
-    setDiceResult({
-      roll,
+    // Create the dice result object
+    const result: GameContextType['diceResult'] = {
+      values,
+      isMatch,
+      matchedValue,
+      sum,
       modifier,
       total,
-    });
+    };
     
-    return total;
+    // If we have a match, check for special events
+    if (isMatch && matchedValue && template.specialDiceEvents) {
+      const specialEventKey = matchedValue.toString();
+      const specialEvent = template.specialDiceEvents[specialEventKey];
+      
+      if (specialEvent) {
+        result.specialEvent = {
+          name: specialEvent.name,
+          description: specialEvent.description,
+          effects: specialEvent.effect || {}
+        };
+      }
+    }
+    
+    setDiceResult(result);
+    
+    return values;
   };
 
   const performAction = async (
     action: string,
-    diceRollValue?: number
+    diceRollValues?: number[]
   ): Promise<void> => {
     if (!gameState || !template || !sessionId) {
       throw new Error('No active game');
@@ -512,15 +553,32 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     setError(null);
 
     try {
+      // Check if all dice values match (special event condition)
+      const isSpecialEvent = diceRollValues && 
+                            diceRollValues.length === 3 && 
+                            diceRollValues[0] === diceRollValues[1] && 
+                            diceRollValues[1] === diceRollValues[2];
+      
+      // Get special event details if there's a match
+      let specialEvent = null;
+      if (isSpecialEvent && template.specialDiceEvents) {
+        const matchedValue = diceRollValues![0].toString();
+        specialEvent = template.specialDiceEvents[matchedValue];
+      }
+
       // Generate AI response
       const aiResponseText = await generateAIResponse(
         template,
         gameState,
         action,
-        diceRollValue ? {
-          roll: diceRollValue,
-          attributeModifier: 0,
-          total: diceRollValue
+        diceRollValues ? {
+          values: diceRollValues,
+          isSpecialEvent: isSpecialEvent,
+          specialEventName: specialEvent?.name,
+          specialEventDescription: specialEvent?.description,
+          sum: isSpecialEvent ? 0 : diceResult?.sum, // Sum is not relevant for special events
+          modifier: isSpecialEvent ? 0 : (diceResult?.modifier || 0),
+          total: isSpecialEvent ? 0 : diceResult?.total
         } : undefined
       );
 
@@ -528,6 +586,19 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       const statsMatch = aiResponseText.match(/\[STATS\]([\s\S]*?)\[\/STATS\]/);
       let updatedState: GameState = { ...gameState };
 
+      // Apply special event effects if applicable
+      if (isSpecialEvent && specialEvent?.effect) {
+        console.log("Applying special event effects:", specialEvent.name);
+        // Create a changes object for special event effects
+        const specialEventChanges = {
+          attributes: specialEvent.effect,
+          relationships: {} // Empty relationships as special events only affect attributes
+        };
+        // Apply special event changes first
+        updatedState = stateManager.applyStatsChanges(updatedState, specialEventChanges);
+      }
+
+      // Then apply stats changes from AI response
       if (statsMatch) {
         const statsText = statsMatch[1];
         const changes = stateManager.parseStatsChanges(statsText);
@@ -554,7 +625,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         finalState,
         action,
         aiResponseText,
-        diceRollValue
+        diceRollValues ? diceRollValues[0] : undefined
       );
 
       setGameState(stateWithHistory);

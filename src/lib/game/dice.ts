@@ -1,39 +1,34 @@
 /**
- * D&D-style dice rolling system
+ * Triple Dice System (Slot Machine Style)
  */
 
-// Roll a single D20 die
-export const rollD20 = (): number => {
-  return Math.floor(Math.random() * 20) + 1;
+// Roll three dice (each 1-6)
+export const rollTripleDice = (): number[] => {
+  return [
+    Math.floor(Math.random() * 6) + 1,
+    Math.floor(Math.random() * 6) + 1,
+    Math.floor(Math.random() * 6) + 1
+  ];
 };
 
-// Check if roll is a critical success (20) or failure (1)
-export const isCriticalSuccess = (roll: number): boolean => roll === 20;
-export const isCriticalFailure = (roll: number): boolean => roll === 1;
-
-// Roll with advantage (roll twice, take the higher value)
-export const rollWithAdvantage = (): { rolls: [number, number]; result: number } => {
-  const roll1 = rollD20();
-  const roll2 = rollD20();
-  return {
-    rolls: [roll1, roll2],
-    result: Math.max(roll1, roll2)
-  };
+// Check if all dice match (for special events)
+export const checkTripleMatch = (dice: number[]): boolean => {
+  return dice[0] === dice[1] && dice[1] === dice[2];
 };
 
-// Roll with disadvantage (roll twice, take the lower value)
-export const rollWithDisadvantage = (): { rolls: [number, number]; result: number } => {
-  const roll1 = rollD20();
-  const roll2 = rollD20();
-  return {
-    rolls: [roll1, roll2],
-    result: Math.min(roll1, roll2)
-  };
+// Get the matched value (if there is a match)
+export const getMatchedValue = (dice: number[]): number | null => {
+  return checkTripleMatch(dice) ? dice[0] : null;
 };
 
-// Calculate total for a skill check (base roll + attribute modifier)
-export const calculateTotal = (roll: number, modifier: number): number => {
-  return roll + modifier;
+// Calculate sum of dice values
+export const calculateDiceSum = (dice: number[]): number => {
+  return dice.reduce((sum, value) => sum + value, 0);
+};
+
+// Apply attribute modifier to dice sum
+export const calculateTotal = (diceSum: number, modifier: number): number => {
+  return diceSum + modifier;
 };
 
 // Determine success of skill check against difficulty class (DC)
@@ -41,16 +36,39 @@ export const isSuccessful = (total: number, difficultyClass: number): boolean =>
   return total >= difficultyClass;
 };
 
-// Get the outcome description based on the roll
+// Get description for special events
+export const getSpecialEventDescription = (
+  matchedValue: number,
+  templateEvents: Record<string, any>
+): string => {
+  if (!templateEvents || !templateEvents[matchedValue.toString()]) {
+    return `Triple ${matchedValue}s! A special event occurs.`;
+  }
+  
+  const event = templateEvents[matchedValue.toString()];
+  return `Special Event: ${event.name} - ${event.description}`;
+};
+
+// Get the attribute effects for a special event
+export const getSpecialEventEffects = (
+  matchedValue: number,
+  templateEvents: Record<string, any>
+): Record<string, number> => {
+  if (!templateEvents || !templateEvents[matchedValue.toString()]) {
+    return {};
+  }
+  
+  return templateEvents[matchedValue.toString()].effect || {};
+};
+
+// Get the outcome description based on the dice roll
 export const getDiceOutcomeDescription = (
-  roll: number,
+  dice: number[],
   total: number,
   difficultyClass: number
 ): string => {
-  if (isCriticalSuccess(roll)) {
-    return 'Critical Success! You performed exceptionally well.';
-  } else if (isCriticalFailure(roll)) {
-    return 'Critical Failure! Your attempt went horribly wrong.';
+  if (checkTripleMatch(dice)) {
+    return `Triple match! All dice showing ${dice[0]}. A special event is triggered!`;
   } else if (isSuccessful(total, difficultyClass)) {
     const margin = total - difficultyClass;
     if (margin >= 5) {
@@ -65,5 +83,19 @@ export const getDiceOutcomeDescription = (
     } else {
       return 'Failure! You were unable to accomplish your goal.';
     }
+  }
+};
+
+// Adjusted difficulty class thresholds based on the new range (3-18)
+export const getDifficultyClass = (
+  difficulty: 'very_easy' | 'easy' | 'medium' | 'hard' | 'very_hard'
+): number => {
+  switch (difficulty) {
+    case 'very_easy': return 5;   // Almost always succeeds
+    case 'easy': return 7;        // Usually succeeds
+    case 'medium': return 10;     // 50/50 chance
+    case 'hard': return 13;       // Usually fails
+    case 'very_hard': return 16;  // Almost always fails
+    default: return 10;
   }
 }; 

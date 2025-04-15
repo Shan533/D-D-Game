@@ -69,6 +69,11 @@ export interface GameTemplate {
   chainEffects?: Record<string, ChainEffect>;
   achievements?: Record<string, Achievement>;
   relationshipSystem?: RelationshipSystem;
+  specialDiceEvents?: Record<string, {
+    name: string;
+    description: string;
+    effect?: Record<string, number>;
+  }>;
 }
 
 export interface GameHistoryEntry {

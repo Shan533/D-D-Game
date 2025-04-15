@@ -12,7 +12,15 @@ export const buildGamePrompt = (
   template: GameTemplate,
   state: GameState,
   playerAction: string,
-  diceRoll?: { roll: number; attributeModifier?: number; total?: number }
+  diceRoll?: { 
+    values: number[]; 
+    isSpecialEvent?: boolean;
+    specialEventName?: string;
+    specialEventDescription?: string;
+    sum?: number;
+    modifier?: number;
+    total?: number;
+  }
 ): string => {
   // Format active relationships
   const relationships = state.relationships || {};
@@ -69,13 +77,31 @@ export const buildGamePrompt = (
   }
 
   // Format dice roll information
-  const diceRollText = diceRoll
-    ? `A D20 dice was rolled with the following result: ${diceRoll.roll}${
-        diceRoll.attributeModifier !== undefined
-          ? ` (Modified by ${diceRoll.attributeModifier} for a total of ${diceRoll.total})`
-          : ''
-      }`
-    : 'No dice roll was performed for this action.';
+  let diceRollText = 'No dice roll was performed for this action.';
+  
+  if (diceRoll) {
+    if (diceRoll.isSpecialEvent && diceRoll.specialEventName && diceRoll.specialEventDescription) {
+      diceRollText = `Three dice were rolled with the following results: [${diceRoll.values.join(', ')}]\n` +
+        `SPECIAL EVENT TRIGGERED! All dice showing ${diceRoll.values[0]}\n` +
+        `Event: ${diceRoll.specialEventName} - ${diceRoll.specialEventDescription}\n` +
+        `This special event affects the character's attributes and the story. Incorporate this event into your narration in a dramatic and meaningful way that impacts the current situation. The triple ${diceRoll.values[0]}s represent a ${
+          diceRoll.values[0] === 1 ? 'major negative event (Bad Luck)' :
+          diceRoll.values[0] === 2 ? 'minor negative event (Minor Misfortune)' :
+          diceRoll.values[0] === 3 ? 'balanced event with mixed outcomes (Balanced Fate)' :
+          diceRoll.values[0] === 4 ? 'minor positive event (Minor Fortune)' :
+          diceRoll.values[0] === 5 ? 'significant positive event (Good Fortune)' :
+          diceRoll.values[0] === 6 ? 'extraordinary positive event (Critical Success)' :
+          'special event'
+        }.`;
+    } else {
+      diceRollText = `Three dice were rolled with the following results: [${diceRoll.values.join(', ')}]\n` +
+        `Regular roll with a sum of ${diceRoll.sum || (diceRoll.values?.reduce((a, b) => a + b, 0))}${
+          diceRoll.modifier !== undefined
+            ? ` (Modified by ${diceRoll.modifier} for a final total of ${diceRoll.total})`
+            : ''
+        }`;
+    }
+  }
 
   // Format active special skills
   const activeSkills = state.activeSpecialSkills || {};
@@ -101,65 +127,52 @@ export const buildGamePrompt = (
 
   // Instructions for requesting dice rolls
   const diceInstructions = `
-IMPORTANT: The following is for your internal decision-making ONLY. DO NOT include the [DICE_CHECK] format in your actual response to the player. Instead, describe the need for a check narratively.
+When there is uncertainty in an outcome or a challenge, determine the attribute being tested, difficulty (DC), and potential outcomes. When narrating, describe challenges naturally without using the [DICE_CHECK] format.
 
-When there is uncertainty in the outcome or a challenge that requires testing the player's abilities, you should internally determine:
-
-1. The appropriate attribute or skill being tested
-2. The difficulty (DC) of the challenge
-3. The potential outcomes based on success or failure
-
-In your narrative, suggest when a dice roll might be appropriate by describing the challenge, but DO NOT use the [DICE_CHECK] format in your response.
-
-For example, instead of writing "[DICE_CHECK: Strength check, DC 15]", write something like "The heavy door looks challenging to move. Your strength will be tested if you try to force it open."
-
+Example: Instead of "[DICE_CHECK: Strength check, DC 15]", write "The heavy door looks challenging to move. Your strength will be tested if you try to force it open, please roll a dice with a skill."
 `;
 
   // Add explanation about how dice results affect the narrative
   const diceResultsExplanation = `
-If a dice roll was provided in the input, use these guidelines:
-- Success (roll + modifier ≥ DC): Describe a successful outcome
-- Critical Success (natural 20): Describe an exceptionally positive outcome
-- Failure (roll + modifier < DC): Describe a setback or complication
-- Critical Failure (natural 1): Describe a significant failure or negative consequence
+TRIPLE DICE SYSTEM:
+Three dice (1-6) are rolled simultaneously:
 
-The degree of success or failure should influence the magnitude of the outcome:
-- Barely succeeded/failed (within 2 of DC): Minor effect
-- Solidly succeeded/failed (3-5 from DC): Moderate effect
-- Greatly succeeded/failed (6+ from DC): Major effect
+1. Matching dice (e.g., three 4s): Triggers a special event based on the value
+   - These events add unexpected twists and affect attributes
+   - Each value (1-6) triggers a different type of special event
+
+2. Non-matching dice: Values summed (3-18) for skill checks
+   - Success: sum + modifier ≥ DC
+   - Failure: sum + modifier < DC
+   - Margin affects outcome intensity (±2: minor, ±3-5: moderate, ±6+: major)
+
+Difficulty scale (3-18 range): Very Easy: DC 5, Easy: DC 7, Medium: DC 10, Hard: DC 13, Very Hard: DC 16
 `;
 
   // NPC interaction guidelines
   const npcInstructions = `
-IMPORTANT NPC GUIDELINES:
-
-1. Include NPCs in your narrative regularly to make the world feel alive and interactive.
-2. NPCs should have consistent personalities based on their descriptions.
-3. When the player interacts with an NPC, consider how the relationship value affects their reaction:
-   - Very Positive (≥75): NPCs are friendly, helpful, and may go out of their way to assist
-   - Positive (≥25): NPCs are generally cooperative and supportive
-   - Neutral (-25 to 25): NPCs maintain a professional or casual attitude
-   - Negative (≤-25): NPCs are unfriendly, skeptical, or resistant
-   - Very Negative (≤-75): NPCs are hostile, may actively oppose or sabotage
-4. NPCs can provide information, challenges, assistance, or obstacles based on their relationship with the player.
-5. Incorporate NPC relationships meaningfully into the narrative outcomes.
-6. NPCs should react to both successes and failures in ways consistent with their character.
-7. Never mention the numerical relationship values directly - show the relationship through dialogue tone and actions.
-8. Consider the NPC's initial description and personality when determining their reactions.
-9. Relationship changes should feel natural and justified by the player's actions.
-10. Significant relationship changes (≥10 points) should be accompanied by noticeable behavioral changes.
+1. Include NPCs regularly to make the world feel alive and interactive
+2. Maintain consistent NPC personalities based on their descriptions
+3. Relationship values affect NPC reactions:
+   - Very Positive (≥75): Friendly, helpful, supportive
+   - Positive (≥25): Generally cooperative
+   - Neutral (-25 to 25): Professional attitude
+   - Negative (≤-25): Unfriendly, resistant
+   - Very Negative (≤-75): Hostile, may sabotage
+4. Show relationships through dialogue and actions, never mention numerical values
+5. Relationship changes should feel natural and justified by player actions
 `;
 
   // Format key events from history
   const formatKeyEvents = (history: GameHistoryEntry[] = []) => {
     const keyEvents = history.filter(entry => entry.isKeyEvent);
-    if (keyEvents.length === 0) return 'No significant events have occurred yet.';
+    if (keyEvents.length === 0) return 'None yet.';
 
     return keyEvents.map(entry => {
       const eventDetails = [
         `Turn ${entry.turn}: ${entry.eventDescription || entry.action}`,
         entry.eventType ? `Type: ${entry.eventType}` : '',
-        entry.relatedNPCs?.length ? `Involved NPCs: ${entry.relatedNPCs.join(', ')}` : '',
+        entry.relatedNPCs?.length ? `NPCs: ${entry.relatedNPCs.join(', ')}` : '',
         entry.impact ? 'Impact:' : '',
         entry.impact?.attributes ? Object.entries(entry.impact.attributes)
           .map(([attr, value]) => `  - ${attr}: ${value > 0 ? '+' : ''}${value}`)
@@ -175,85 +188,55 @@ IMPORTANT NPC GUIDELINES:
   };
 
   // Build the complete prompt
-  const prompt = `ROLE AND TASK:
-You are the game master for a D&D-style game called "${state.scenario}". Your role is to create an engaging, interactive narrative that responds to player actions while maintaining game mechanics and consistency.
+  const prompt = `ROLE: Game master for "${state.scenario}" - Create an engaging narrative that responds to player actions.
 
-LANGUAGE AND STYLE GUIDELINES:
-1. ${languageInstruction}
-2. Match your tone and style to the theme of the template: "${templateTitle}"
-3. Use vocabulary and expressions appropriate for the scenario and setting.
-4. If the scenario has a specific cultural context (e.g., Asian parenting, corporate setting, anime setting, ancient Chinese setting), use language that reflects this context.
-5. Maintain consistency in language style throughout your responses.
-6. If the player switches languages in their input, adapt and respond in the same language they used.
+LANGUAGE: ${languageInstruction} Match your tone to "${templateTitle}".
 
-GAME STATE INFORMATION:
-Current game state:
-- Character Name: ${state.playerName}
-- Customizations:
-  - ${formattedCustomizations}
-- Attributes:
-  - ${formattedAttributes}
+GAME STATE:
+- Character: ${state.playerName}
+- Customizations: ${formattedCustomizations}
+- Attributes: ${formattedAttributes}
 - Current scene: ${state.currentScene}
-${activeSkills && Object.keys(activeSkills).length > 0 
-  ? `- Active effects:\n  - ${formattedActiveSkills}\n` 
-  : ''}
-${relationships && Object.keys(relationships).length > 0 
-  ? `- Relationships:\n  - ${formattedRelationships}\n` 
-  : ''}
+${activeSkills && Object.keys(activeSkills).length > 0 ? `- Active effects: ${formattedActiveSkills}\n` : ''}
+${relationships && Object.keys(relationships).length > 0 ? `- Relationships: ${formattedRelationships}\n` : ''}
 
-${template.npcs && Object.keys(template.npcs).length > 0 
-  ? `Available NPCs in this world:\n${availableNPCs}\n` 
-  : ''}
+${template.npcs && Object.keys(template.npcs).length > 0 ? `NPCs: ${availableNPCs}\n` : ''}
 
-KEY EVENTS HISTORY:
-${formatKeyEvents(state.history)}
+KEY EVENTS: ${formatKeyEvents(state.history)}
 
 ${previousInteractionText}
 
-The player has chosen to: ${playerAction}
+PLAYER ACTION: ${playerAction}
 
 ${diceRollText}
 
-GAME MECHANICS AND RULES:
-
-1. Dice Roll System:
-${diceInstructions}
-
+GAME MECHANICS:
+1. Dice System: ${diceInstructions}
 ${diceResultsExplanation}
 
-2. NPC Interaction Rules:
-${npcInstructions}
+2. NPC Rules: ${npcInstructions}
 
 RESPONSE REQUIREMENTS:
-Based on this information, narrate what happens next. Include:
-1. First, describe the current stage/situation before the player's action
-2. Then describe the outcome of the player's action, suggesting when a dice roll might be appropriate by describing the challenge narratively
-3. World/NPC reactions and interactions
-4. New information or opportunities
-5. A question or hook for what the player might want to do next
+1. Describe the current situation before the player's action
+2. Describe the outcome of the player's action
+3. Include NPC reactions and world interactions
+4. Provide new information or opportunities
+5. End with a hook for what might happen next
 
-CRITICAL RULES:
-- NEVER include the [DICE_CHECK] format directly in your response.
-- This formatting is only for your internal understanding of the game mechanics.
-- Always incorporate NPCs from the available list to create a rich, interactive story.
-- Respond in the language that matches the template title (${isChinese ? 'Chinese' : 'English'}).
-- Reference past key events when relevant to maintain narrative continuity.
-- Consider the impact of previous events on current NPC relationships and world state.
+IMPORTANT:
+- Never use [DICE_CHECK] format in your response
+- Always incorporate NPCs from the available list
+- Respond in ${isChinese ? 'Chinese' : 'English'}
+- Reference key events when relevant
 
 ATTRIBUTE AND RELATIONSHIP UPDATES:
-At the end of your response, include any attribute or relationship changes in the following format:
+End with stats changes in the format:
 [STATS]
 - Attribute changes: [attribute_name]+[value] or [attribute_name]-[value]
 - Relationship changes: [npc_name]+[value] or [npc_name]-[value]
 [/STATS]
 
-For example:
-[STATS]
-- Attribute changes: intelligence+2, stress-1
-- Relationship changes: lily+5, mom-3
-[/STATS]
-
-Keep your response engaging, dramatic, and in the style of a D&D Dungeon Master. Respond with 3-4 paragraphs.`;
+Keep your response engaging and dramatic. Respond with 3-4 paragraphs.`;
 
   return prompt;
 }; 

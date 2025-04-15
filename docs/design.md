@@ -80,10 +80,12 @@ Game Mechanics
 Each template defines unique attributes relevant to its scenario
 Skills are tied to attributes and represent actions players can take
 Skill checks use a D20 dice roll modified by relevant attribute values
-2. D&D Dice System
-Random number generation (1-20) for skill checks
-Critical success/failure mechanics
-Modified success thresholds based on character attributes
+2. Triple Dice System (Slot Machine Style)
+- Three dice (each 1-6) are rolled simultaneously
+- If all three dice show the same number, a special event is triggered based on the matched number
+- If dice are not identical, their values are summed (3-18) to determine the outcome
+- Modified success thresholds based on character attributes
+- Special events add unpredictability and excitement to gameplay
 3. NPC Interaction System
 Limited set of key NPCs with defined personalities and preferences
 Basic relationship tracking (-100 to 100 scale)
@@ -162,8 +164,9 @@ Current game state:
 
 The player has chosen to: {playerAction}
 
-A D20 dice was rolled with the following result: {diceRoll} 
-(Modified by {attributeValue} for a total of {total})
+Three dice were rolled with the following results: [{dice1}, {dice2}, {dice3}]
+{If all dice match: "SPECIAL EVENT TRIGGERED! All dice showing {matchedValue}"}
+{If dice don't match: "Regular roll with a sum of {total} (Modified by {attributeValue} for a final total of {finalTotal})"}
 
 Based on this information, narrate what happens next. Include:
 1. The outcome of the player's action
@@ -198,12 +201,12 @@ OpenAI integration
 Prompt engineering design
 Basic dialogue interface
 Phase 2 (1-2 days) - Game Experience Enhancement
-D&D Dice System
+Triple Dice System
 
 
-Random number generator
-Skill check mechanism
-Result visualization
+Random number generator for three dice
+Special event triggering for matching dice
+Result visualization with slot machine aesthetics
 Game Flow Design
 
 
@@ -254,12 +257,13 @@ Core Game Loop - Highest priority
 Dialogue and narrative
 Attribute and skill system
 Basic decision branches
-Dice System - High priority
+Triple Dice System - High priority
 
 
-Adds randomness and uncertainty
-Provides immediate feedback
-Enhances gameplay
+Adds randomness and uncertainty with triple dice rolls
+Special events for matching dice enhance excitement
+Provides immediate feedback with slot machine-like visualization
+Enhances gameplay with unexpected outcomes
 Simplified NPC System - Medium-high priority
 
 
@@ -308,7 +312,8 @@ Main Game Interface
 AI-generated narrative display
 Character stats sidebar
 Action input/selection area
-Dice roll visualization
+Triple dice slot machine-style visualization
+Special event indicator for matching dice
 Game history/log access
 User Flow
 User registers/logs in

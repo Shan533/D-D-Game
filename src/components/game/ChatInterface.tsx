@@ -5,7 +5,7 @@ import { useGame } from '@/context/GameContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import DiceRoller, { Dice } from '@/components/game/DiceRoller';
+import DiceRoller, { SingleDice, TripleDice } from '@/components/game/DiceRoller';
 
 // Function to remove [STATS] blocks from AI responses
 const cleanResponse = (response: string): string => {
@@ -19,10 +19,9 @@ export default function ChatInterface() {
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showSkillsPanel, setShowSkillsPanel] = useState(false);
-  const [diceValue, setDiceValue] = useState<number | null>(null);
+  const [diceValues, setDiceValues] = useState<number[] | null>(null);
   const [showDiceHistory, setShowDiceHistory] = useState(true);  // Controls whether to show dice results
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   
   const { 
     gameState, 
@@ -96,15 +95,6 @@ export default function ChatInterface() {
     };
   };
   
-  // TODO: Add logic for the success chance.
-  // Calculate success chance based on attribute value (similar to D20 roll)
-  const calculateSuccessChance = (attributeValue: number): number => {
-    // Base 50% chance + 5% per attribute point
-    const chance = 50 + attributeValue * 5;
-    // Cap between 5% and 95%
-    return Math.min(95, Math.max(5, chance));
-  };
-  
   // UseEffect to clear dice result after a new response
   useEffect(() => {
     if (aiResponse) {
@@ -127,15 +117,15 @@ export default function ChatInterface() {
     
     try {
       // Clear any previous dice results before submitting a new action
-      if (!showDice || !diceValue) {
+      if (!showDice || !diceValues) {
         clearDiceResult();
       }
       
-      await performAction(action, diceValue || undefined);
+      await performAction(action, diceValues || undefined);
       setAction('');
       setSelectedSkill(null);
       setShowDice(false);
-      setDiceValue(null);
+      setDiceValues(null);
     } catch (error) {
       console.error('Error performing action:', error);
     }
@@ -151,8 +141,8 @@ export default function ChatInterface() {
     }
   };
   
-  const handleDiceRoll = (value: number) => {
-    setDiceValue(value);
+  const handleDiceRoll = (values: number[]) => {
+    setDiceValues(values);
   };
   
   const skipTypingEffect = () => {
@@ -206,14 +196,33 @@ export default function ChatInterface() {
         {diceResult && showDiceHistory && (
           <div className="bg-[var(--game-bg-secondary)] p-4 rounded-lg border border-[var(--game-bg-accent)]">
             <div className="flex justify-between items-center">
-              <p className="font-medium text-[var(--game-text-primary)]">
-                Dice Roll: {diceResult.roll} + {diceResult.modifier} = {diceResult.total}
-                {diceResult.success !== undefined && (
-                  <span className={diceResult.success ? "text-green-600 ml-2" : "text-red-600 ml-2"}>
-                    {diceResult.success ? "Success!" : "Failure!"}
-                  </span>
+              <div className="flex-1">
+                <p className="font-medium text-[var(--game-text-primary)] flex flex-wrap items-center">
+                  <span>Dice Roll: [{diceResult.values.join(', ')}]</span>
+                  {diceResult.isMatch ? (
+                    <span className="text-pink-500 ml-2 font-bold animate-pulse">
+                      Match! {diceResult.specialEvent?.name || `Triple ${diceResult.matchedValue}s`}
+                    </span>
+                  ) : (
+                    <>
+                      <span className="mx-2">Sum: {diceResult.sum}</span>
+                      {diceResult.modifier !== 0 && (
+                        <span>+ {diceResult.modifier} = {diceResult.total}</span>
+                      )}
+                      {diceResult.success !== undefined && (
+                        <span className={diceResult.success ? "text-green-600 ml-2" : "text-red-600 ml-2"}>
+                          {diceResult.success ? "Success!" : "Failure!"}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </p>
+                {diceResult.isMatch && diceResult.specialEvent && (
+                  <p className="text-sm text-[var(--game-text-secondary)] mt-1">
+                    {diceResult.specialEvent.description}
+                  </p>
                 )}
-              </p>
+              </div>
               <Button 
                 onClick={() => setShowDiceHistory(false)} 
                 size="sm" 
@@ -291,12 +300,6 @@ export default function ChatInterface() {
                       </span>
                     </div>
                     <p className="text-xs text-[var(--game-text-secondary)] mb-2">{skill.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-[var(--game-text-secondary)]">Success chance:</span>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-                        {calculateSuccessChance(skill.attributeValue)}%
-                      </span>
-                    </div>
                   </button>
                 ))}
               </div>
@@ -316,11 +319,15 @@ export default function ChatInterface() {
                     </label>
                   </div>
                   {showDice && (
-                    diceValue ? 
+                    diceValues ? 
                     <div className="flex items-center">
-                      <Dice value={diceValue} size="sm" animate={false} />
+                      <div className="flex space-x-1">
+                        {diceValues.map((value, index) => (
+                          <SingleDice key={index} value={value} size="sm" animate={false} />
+                        ))}
+                      </div>
                       <Button 
-                        onClick={() => setDiceValue(null)} 
+                        onClick={() => setDiceValues(null)} 
                         size="sm" 
                         className="ml-2 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
                       >
@@ -329,8 +336,11 @@ export default function ChatInterface() {
                     </div>
                     : 
                     <div className="flex items-center">
-                      <Dice onRollComplete={handleDiceRoll} size="sm" />
-                      <span className="ml-2 text-xs text-[var(--game-text-secondary)]">Click to roll</span>
+                      <DiceRoller 
+                        onRoll={handleDiceRoll} 
+                        className="scale-50 origin-left"
+                        specialEvents={template?.specialDiceEvents}
+                      />
                     </div>
                   )}
                 </div>
@@ -400,7 +410,7 @@ export default function ChatInterface() {
                       onClick={() => {
                         setSelectedSkill(null);
                         setShowDice(false);
-                        setDiceValue(null);
+                        setDiceValues(null);
                       }}
                     >
                       Clear
@@ -415,13 +425,17 @@ export default function ChatInterface() {
                     {showDice && (
                       <div className="flex items-center justify-between p-2 bg-[var(--game-bg-secondary)] rounded-md flex-1 mr-2">
                         <span className="text-xs text-[var(--game-text-primary)]">
-                          {diceValue ? `Rolled: ${diceValue}` : 'Roll dice:'}
+                          {diceValues ? `Rolled: ${diceValues.join(', ')}` : 'Roll dice:'}
                         </span>
-                        {diceValue ? 
+                        {diceValues ? 
                           <div className="flex items-center">
-                            <Dice value={diceValue} animate={false} size="sm" />
+                            <div className="flex space-x-1">
+                              {diceValues.map((value, index) => (
+                                <SingleDice key={index} value={value} size="sm" animate={false} />
+                              ))}
+                            </div>
                             <Button 
-                              onClick={() => setDiceValue(null)} 
+                              onClick={() => setDiceValues(null)} 
                               size="sm" 
                               className="ml-2 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
                             >
@@ -429,7 +443,13 @@ export default function ChatInterface() {
                             </Button>
                           </div>
                           : 
-                          <Dice onRollComplete={handleDiceRoll} size="sm" />
+                          <div className="flex items-center">
+                            <DiceRoller 
+                              onRoll={handleDiceRoll} 
+                              className="scale-70 origin-left"
+                              specialEvents={template?.specialDiceEvents}
+                            />
+                          </div>
                         }
                       </div>
                     )}
