@@ -123,7 +123,7 @@ export default function ChatInterface() {
         clearDiceResult();
       }
       
-      await performAction(action, selectedSkill || undefined, showDice, diceValue);
+      await performAction(action, diceValue || undefined);
       setAction('');
       setSelectedSkill(null);
       setShowDice(false);
@@ -381,7 +381,7 @@ export default function ChatInterface() {
                         } ${
                           getAttributeBadgeColors(availableSkills.find(s => s.id === selectedSkill)?.attributeKey || 'default').text
                         }`}>
-                          {availableSkills.find(s => s.id === selectedSkill)?.attributeName}: {availableSkills.find(s => s.id === selectedSkill)?.attributeValue}
+                          {availableSkills.find(s => s.id === selectedSkill)?.attributeKey}: {availableSkills.find(s => s.id === selectedSkill)?.attributeValue}
                         </span>
                       )}
                     </div>
@@ -424,13 +424,6 @@ export default function ChatInterface() {
                         }
                       </div>
                     )}
-                    
-                    <div className="flex items-center p-2 bg-[var(--game-bg-secondary)] rounded-md flex-1 ml-2">
-                      <span className="text-xs text-[var(--game-text-primary)] mr-2">Success chance:</span>
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-800">
-                        {calculateSuccessChance(availableSkills.find(s => s.id === selectedSkill)?.attributeValue || 0)}%
-                      </span>
-                    </div>
                   </div>
                 </div>
               )}

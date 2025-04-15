@@ -240,6 +240,19 @@ CRITICAL RULES:
 - Reference past key events when relevant to maintain narrative continuity.
 - Consider the impact of previous events on current NPC relationships and world state.
 
+ATTRIBUTE AND RELATIONSHIP UPDATES:
+At the end of your response, include any attribute or relationship changes in the following format:
+[STATS]
+- Attribute changes: [attribute_name]+[value] or [attribute_name]-[value]
+- Relationship changes: [npc_name]+[value] or [npc_name]-[value]
+[/STATS]
+
+For example:
+[STATS]
+- Attribute changes: intelligence+2, stress-1
+- Relationship changes: lily+5, mom-3
+[/STATS]
+
 Keep your response engaging, dramatic, and in the style of a D&D Dungeon Master. Respond with 3-4 paragraphs.`;
 
   return prompt;

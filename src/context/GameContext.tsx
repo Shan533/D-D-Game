@@ -38,7 +38,7 @@ interface GameContextType {
   endGame: () => Promise<void>;
 
   // Gameplay
-  performAction: (action: string, useSkill?: string, rollDice?: boolean, diceValue?: number | null) => Promise<void>;
+  performAction: (action: string, diceRollValue?: number) => Promise<void>;
   rollDiceForSkill: (skill: string) => Promise<number>;
   clearDiceResult: () => void;
 }
@@ -393,7 +393,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Build the prompt for the AI
       const prompt = buildGamePrompt(template, state, playerAction, diceRoll);
-      
+
       // DEBUGGING: Log the prompt for debugging
       console.log('=== AI Prompt ===');
       console.log(prompt);
@@ -413,20 +413,46 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       const aiText = response.text;
       setAiResponse(aiText);
       
-      // Update game state with the AI response
-      if (gameState) {
-        const updatedState = {
-          ...gameState,
-          currentScene: aiText,
-          turn: gameState.turn + 1
+      // Process stat changes from AI response
+      const statsMatch = aiText.match(/\[STATS\]([\s\S]*?)\[\/STATS\]/);
+      let updatedState: GameState = { ...state };
+      
+      if (statsMatch) {
+        const statsText = statsMatch[1];
+        
+        // Parse and apply the changes
+        const changes = stateManager.parseStatsChanges(statsText);
+        
+        // Create new objects for attributes and relationships to ensure React detects changes
+        updatedState = {
+          ...updatedState,
+          attributes: { ...updatedState.attributes },
+          relationships: { ...updatedState.relationships }
         };
         
-        setGameState(updatedState);
-        
-        // Save game state if we have a session ID
-        if (sessionId) {
-          await stateManager.saveGameState(sessionId, updatedState);
-        }
+        // Apply the changes to the new state objects
+        updatedState = stateManager.applyStatsChanges(updatedState, changes);
+      }
+      
+      // Update game state with the AI response
+      updatedState = {
+        ...updatedState,
+        currentScene: aiText,
+        turn: state.turn + 1
+      };
+      
+      // Force a state update by creating a new object
+      const finalState = {
+        ...updatedState,
+        relationships: { ...updatedState.relationships },
+        attributes: { ...updatedState.attributes }
+      };
+      
+      setGameState(finalState);
+      
+      // Save game state if we have a session ID
+      if (sessionId) {
+        await stateManager.saveGameState(sessionId, finalState);
       }
       
       return aiText;
@@ -476,78 +502,65 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const performAction = async (
     action: string,
-    useSkill?: string,
-    rollDice: boolean = false,
-    diceValue?: number | null
+    diceRollValue?: number
   ): Promise<void> => {
+    if (!gameState || !template || !sessionId) {
+      throw new Error('No active game');
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      if (!gameState || !template || !sessionId) {
-        throw new Error('No active game');
-      }
-      
-      setLoading(true);
-      setError(null);
-      
-      let diceRollResult: { roll: number; attributeModifier?: number; total?: number } | undefined = undefined;
-      let diceRollValue: number | undefined = undefined;
-      
-      // Handle dice roll if required
-      if (rollDice && useSkill) {
-        if (diceValue) {
-          // Use the provided dice value from the UI
-          const skill = template.baseSkills[useSkill];
-          const attributeName = skill?.attributeModifier || '';
-          const attributeValue = gameState.attributes[attributeName];
-          
-          // Calculate modifier (simplified: attribute value / 5, rounded down)
-          const modifier = Math.floor(attributeValue / 5);
-          const total = calculateTotal(diceValue, modifier);
-          
-          setDiceResult({
-            roll: diceValue,
-            modifier,
-            total,
-            success: total >= 10 // Simple success threshold
-          });
-          
-          diceRollResult = {
-            roll: diceValue,
-            attributeModifier: modifier,
-            total,
-          };
-          diceRollValue = diceValue;
-        } else {
-          const total = await rollDiceForSkill(useSkill);
-          
-          if (diceResult) {
-            diceRollResult = {
-              roll: diceResult.roll,
-              attributeModifier: diceResult.modifier,
-              total,
-            };
-            diceRollValue = diceResult.roll;
-          }
-        }
-      }
-      
       // Generate AI response
       const aiResponseText = await generateAIResponse(
         template,
         gameState,
         action,
-        diceRollResult
+        diceRollValue ? {
+          roll: diceRollValue,
+          attributeModifier: 0,
+          total: diceRollValue
+        } : undefined
       );
-      
-      // Update game state
-      const updatedState = await stateManager.addHistoryEntry(
+
+      // Process stat changes from AI response
+      const statsMatch = aiResponseText.match(/\[STATS\]([\s\S]*?)\[\/STATS\]/);
+      let updatedState: GameState = { ...gameState };
+
+      if (statsMatch) {
+        const statsText = statsMatch[1];
+        const changes = stateManager.parseStatsChanges(statsText);
+        updatedState = stateManager.applyStatsChanges(updatedState, changes);
+      }
+
+      // Update game state with the AI response
+      updatedState = {
+        ...updatedState,
+        currentScene: aiResponseText,
+        turn: gameState.turn + 1
+      };
+
+      // Force a state update by creating a new object
+      const finalState = {
+        ...updatedState,
+        relationships: { ...updatedState.relationships },
+        attributes: { ...updatedState.attributes }
+      };
+
+      // Add history entry with the updated state
+      const stateWithHistory = await stateManager.addHistoryEntry(
         sessionId,
-        gameState,
+        finalState,
         action,
         aiResponseText,
-        diceRollValue,
+        diceRollValue
       );
-      
-      setGameState(updatedState);
+
+      setGameState(stateWithHistory);
+
+      // Save game state
+      await stateManager.saveGameState(sessionId, stateWithHistory);
     } catch (error) {
       setError((error as Error).message);
     } finally {

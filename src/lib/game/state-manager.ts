@@ -534,4 +534,104 @@ export const updateCurrentScene = (
     ...state,
     currentScene: newScene
   };
+};
+
+/**
+ * Parses the stats changes from the AI response
+ * @param statsText The text containing the stats changes
+ * @returns An object containing attribute and relationship changes
+ */
+export const parseStatsChanges = (statsText: string): {
+  attributes: Record<string, number>;
+  relationships: Record<string, number>;
+} => {
+  const changes: {
+    attributes: Record<string, number>;
+    relationships: Record<string, number>;
+  } = {
+    attributes: {},
+    relationships: {}
+  };
+
+  // Process attribute changes
+  const attributeMatch = statsText.match(/Attribute changes: (.*)/);
+  if (attributeMatch) {
+    const attributeChanges = attributeMatch[1].split(',').map(change => change.trim());
+    attributeChanges.forEach(change => {
+      const match = change.match(/([^+-]+)([+-])(\d+)/);
+      if (match) {
+        const [, attr, operator, value] = match;
+        const attributeName = attr.trim().toLowerCase().replace(/\s+/g, '_');
+        const changeValue = parseInt(value) * (operator === '+' ? 1 : -1);
+        if (!isNaN(changeValue)) {
+          changes.attributes[attributeName] = changeValue;
+        }
+      }
+    });
+  }
+
+  // Process relationship changes
+  const relationshipMatch = statsText.match(/Relationship changes: (.*)/);
+  if (relationshipMatch) {
+    const relationshipChanges = relationshipMatch[1].split(',').map(change => change.trim());
+    relationshipChanges.forEach(change => {
+      const match = change.match(/([^+-]+)([+-])(\d+)/);
+      if (match) {
+        const [, npc, operator, value] = match;
+        const npcName = npc.trim();
+        const changeValue = parseInt(value) * (operator === '+' ? 1 : -1);
+        if (!isNaN(changeValue)) {
+          changes.relationships[npcName] = changeValue;
+        }
+      }
+    });
+  }
+
+  // Also check for direct attribute changes without the "Attribute changes:" prefix
+  const directAttributeMatch = statsText.match(/- ([^:]+)([+-])(\d+)/);
+  if (directAttributeMatch) {
+    const [, attr, operator, value] = directAttributeMatch;
+    const attributeName = attr.trim().toLowerCase().replace(/\s+/g, '_');
+    const changeValue = parseInt(value) * (operator === '+' ? 1 : -1);
+    if (!isNaN(changeValue)) {
+      changes.attributes[attributeName] = changeValue;
+    }
+  }
+
+  return changes;
+};
+
+/**
+ * Applies the parsed stats changes to the game state
+ * @param state The current game state
+ * @param changes The changes to apply
+ * @returns The updated game state
+ */
+export const applyStatsChanges = (
+  state: GameState,
+  changes: {
+    attributes: Record<string, number>;
+    relationships: Record<string, number>;
+  }
+): GameState => {
+  let updatedState = { ...state };
+
+  // Apply attribute changes
+  Object.entries(changes.attributes).forEach(([attr, value]) => {
+    const currentValue = updatedState.attributes[attr] || 0;
+    updatedState = updateAttribute(updatedState, attr, currentValue + value);
+  });
+
+  // Apply relationship changes
+  Object.entries(changes.relationships).forEach(([npc, value]) => {
+    const currentValue = updatedState.relationships?.[npc] || 0;
+    updatedState = updateRelationship(updatedState, npc, value);
+  });
+
+  // Create new objects to ensure React detects the changes
+  return {
+    ...updatedState,
+    attributes: { ...updatedState.attributes },
+    relationships: { ...updatedState.relationships }
+  };
 }; 
