@@ -107,6 +107,10 @@ Utility functions and service integrations:
 - `supabase/`: Database client and operations
 - `openai/`: AI integration
 - `game/`: Core game mechanics and template handling
+  - `prompt-builder.ts`: Builds AI prompts, includes comprehensive story conclusion system
+  - `dice.ts`: Handles dice rolling mechanics
+  - `state-manager.ts`: Manages game state updates
+  - `template-loader.ts`: Loads and validates game templates
 
 ### `/src/utils`
 Additional utility functions and service integrations.
@@ -116,6 +120,8 @@ JSON-formatted game scenario templates containing specific game scenario templat
 
 ### `/src/context`
 React Context providers for global state management.
+- `GameContext.tsx`: Manages game state and player interactions, including story ending detection
+- `AuthContext.tsx`: Handles authentication and user management
 - Note: The context files are quite large (AuthContext.tsx ~30KB, GameContext.tsx ~15KB) and may benefit from refactoring into smaller modules.
 
 ### `/src/types`

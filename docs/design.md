@@ -157,6 +157,53 @@ Stage Progression Logic:
 - The AI is informed of stage transitions to maintain narrative coherence
 - Stage completion can trigger special events or narrative moments
 
+8. Story Conclusion System
+The game features a flexible conclusion system that provides satisfying endings through multiple paths:
+
+Conclusion Triggers:
+- **Natural Completion**: When the player completes all goals in the final stage
+- **Extended Gameplay**: When the player remains in the final stage for 30+ turns, even without completing all goals
+- **Player-Requested Ending**: When the player explicitly requests to end the story
+
+Player-Requested Ending Methods:
+- Using specific phrases like "结束故事" (End story), "游戏结束" (Game over), or their English equivalents
+- The system detects these requests through pattern matching and exact phrase detection
+- This works regardless of the current stage or game progress
+
+Ending Types and Characteristics:
+- **Complete Ending**: When all final stage goals are completed, provides a fully realized conclusion
+- **Extended Gameplay Ending**: Acknowledges partial completion but still offers closure
+- **Requested Ending**: Respects the player's desire to conclude while providing narrative closure
+
+AI Prompt Modifications for Endings:
+- Prominent ending instruction at the top of the prompt
+- Detailed guidance for crafting appropriate conclusions
+- Requirements to acknowledge character journey, relationships, and growth
+- Instructions to provide a clear "THE END" marker
+
+Ending Guidance for the AI:
+```
+PLAYER-REQUESTED ENDING (Current Stage: "{stageName}")
+The player has explicitly requested to conclude the story.
+Stage Description: {stageDescription}
+Current Goals: {formattedGoals}
+
+FORCED ENDING REQUIRED:
+The player wishes to end the game at this point. Provide a satisfying conclusion based on their current situation.
+Even though they haven't completed the full game, create a believable and appropriate ending that:
+1. Acknowledges their journey so far and major accomplishments
+2. Provides closure to important relationships and plot threads
+3. Gives a sense of what happens to their character after this point
+4. Respects their desire to conclude the story now
+5. Ends with "THE END" to signal the story's completion
+```
+
+Implementation Details:
+- The system detects ending requests in the `performAction` function
+- The `buildGamePrompt` function includes special ending instructions when applicable
+- The `forceEndingRequested` parameter ensures ending instructions are included regardless of stage structure
+- Multiple detection patterns ensure reliable recognition of ending requests in both Chinese and English
+
 Database Schema (Supabase)
 -- Users table
 CREATE TABLE users (

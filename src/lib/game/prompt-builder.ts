@@ -6,6 +6,8 @@ import { GameState, GameTemplate, GameHistoryEntry, StageDefinition } from '../.
  * @param state The current game state
  * @param playerAction The player's action
  * @param diceRoll Optional dice roll information
+ * @param stageTransition Optional information about a stage transition that just occurred
+ * @param forceEndingRequested Optional flag indicating player has requested to end the game
  * @returns A formatted prompt for the AI
  */
 export const buildGamePrompt = (
@@ -20,7 +22,15 @@ export const buildGamePrompt = (
     sum?: number;
     modifier?: number;
     total?: number;
-  }
+  },
+  stageTransition?: {
+    previousStageId: string;
+    previousStageName: string;
+    newStageId: string;
+    newStageName: string;
+    newStageDescription: string;
+  },
+  forceEndingRequested?: boolean
 ): string => {
   // Format active relationships
   const relationships = state.relationships || {};
@@ -196,7 +206,61 @@ Difficulty scale (3-18 range): Very Easy: DC 5, Easy: DC 7, Medium: DC 10, Hard:
   };
 
   // --- Stage Information Section ---
+  // Enhanced visibility: Stage information is now prominently displayed at the top of the prompt
+  // with additional emphasis to ensure the AI clearly incorporates stage context in all responses.
   let stageInfoText = "No stage information available.";
+  
+  // Stage transition notification text
+  let stageTransitionText = "";
+
+  // Overall game progression information
+  let gameProgressionText = "";
+
+  // Check if we have a forced ending request - this should work REGARDLESS of stage structure
+  if (forceEndingRequested) {
+    // Special ending message for games without proper stage structure
+    stageInfoText = `PLAYER-REQUESTED ENDING
+The player has explicitly requested to conclude the story.
+
+FORCED ENDING REQUIRED:
+Provide a satisfying conclusion to the story based on the current situation.
+Create a believable and appropriate ending that:
+1. Acknowledges the journey so far and major accomplishments
+2. Provides closure to important relationships and plot threads
+3. Gives a sense of what happens to the character after this point
+4. Respects the player's desire to conclude the story now
+5. Ends with "THE END" to signal the story's completion
+
+The ending should reflect the player's current attributes, relationships, and situation.`;
+  }
+
+  if (template.stages) {
+    // Format the overall stage progression information
+    const stageIds = Object.keys(template.stages);
+    if (stageIds.length > 0) {
+      const currentStageIndex = stageIds.indexOf(state.currentStageId);
+      const stageProgressList = stageIds.map((stageId, index) => {
+        const stage = template.stages?.[stageId];
+        if (!stage) return ` Unknown Stage`;
+        
+        const stageName = stage.name;
+        let prefix = " ";
+        if (stageId === state.currentStageId) {
+          prefix = "→"; // Current stage indicator
+        } else if (index < currentStageIndex) {
+          prefix = "✓"; // Completed stage
+        }
+        return `${prefix} ${stageName}${stageId === stageIds[stageIds.length - 1] ? " (Final Stage)" : ""}`;
+      }).join('\n');
+
+      const progressPercentage = currentStageIndex >= 0 
+        ? Math.round((currentStageIndex / (stageIds.length - 1)) * 100) 
+        : 0;
+
+      gameProgressionText = `Game Progression (${progressPercentage}% complete):
+${stageProgressList}`;
+    }
+  }
 
   if (template.stages && state.currentStageId && template.stages[state.currentStageId]) {
     const currentStage: StageDefinition = template.stages[state.currentStageId];
@@ -210,10 +274,87 @@ Difficulty scale (3-18 range): Very Easy: DC 5, Easy: DC 7, Medium: DC 10, Hard:
       return `  - ${goal.name} (${isCompleted ? 'Completed' : 'Pending'}): ${goal.description} (Requires: ${requirementsText})`;
     }).join('\n');
 
-    stageInfoText = `Current Stage: "${currentStage.name}"
+    // Check if this is the final stage
+    const stageIds = Object.keys(template.stages);
+    const isFinalStage = state.currentStageId === stageIds[stageIds.length - 1];
+    const allGoalsCompleted = currentStage.goals.every(goal => 
+      completedGoalsForStage.includes(goal.id)
+    );
+    
+    // Special handling for final stage with completed goals or forced ending
+    if (forceEndingRequested) {
+      // Player has explicitly requested to end the game (override earlier basic ending)
+      stageInfoText = `PLAYER-REQUESTED ENDING (Current Stage: "${currentStage.name}")
+The player has explicitly requested to conclude the story.
+Stage Description: ${currentStage.description}
+Current Goals:
+${formattedGoals}
+
+FORCED ENDING REQUIRED:
+The player wishes to end the game at this point. Provide a satisfying conclusion based on their current situation.
+Even though they haven't completed the full game, create a believable and appropriate ending that:
+1. Acknowledges their journey so far and major accomplishments
+2. Provides closure to important relationships and plot threads
+3. Gives a sense of what happens to their character after this point
+4. Respects their desire to conclude the story now
+5. Ends with "THE END" to signal the story's completion
+
+The ending should reflect the player's current attributes, relationships, and situation.`;
+    } else if (isFinalStage && allGoalsCompleted) {
+      stageInfoText = `FINAL STAGE: "${currentStage.name}" (ALL GOALS COMPLETED)
+The player has completed all goals in the final stage and is ready for the story conclusion.
+Stage Description: ${currentStage.description}
+Completed Goals:
+${formattedGoals}
+
+STORY CONCLUSION REQUIRED:
+As this is the final stage with all goals completed, your response should work toward bringing the story to a satisfying conclusion.
+Create a sense of closure while honoring the player's choices and achievements throughout their journey.
+
+Conclusion Guidelines:
+1. Reflect on key decisions and accomplishments throughout all stages
+2. Reference important relationships developed with NPCs
+3. Highlight character growth based on attribute changes
+4. Provide a sense of the character's future beyond the story
+5. For games with >20 turns, create an epilogue summarizing long-term outcomes
+6. End with a clear "THE END" marker to signal story completion
+
+The player's attributes and relationships should influence the nature of the ending (e.g., high charisma might lead to a socially successful ending).`;
+    } else if (isFinalStage && state.turn >= 30) {
+      // Special handling for very long games in final stage, even if not all goals completed
+      stageInfoText = `FINAL STAGE: "${currentStage.name}" (EXTENDED GAMEPLAY)
+The player has been in the final stage for an extended time (${state.turn} turns).
+Stage Description: ${currentStage.description}
+Stage Goals:
+${formattedGoals}
+
+EXTENDED GAMEPLAY GUIDANCE:
+As this game has continued for ${state.turn} turns, consider guiding it toward a natural conclusion.
+The player may not complete all goals, but should still receive a satisfying ending.
+Provide opportunities to resolve major plot threads and relationships.
+If the player takes an action that could reasonably conclude the story, respond with an appropriate ending.`;
+    } else {
+      stageInfoText = `Current Stage: "${currentStage.name}"${isFinalStage ? " (FINAL STAGE)" : ""}
 Stage Description: ${currentStage.description}
 Stage Goals:
 ${formattedGoals}`;
+    }
+
+    // Add stage transition notification if provided
+    if (stageTransition) {
+      stageTransitionText = `
+STAGE TRANSITION NOTICE:
+The player has completed the "${stageTransition.previousStageName}" stage and is now entering the "${stageTransition.newStageName}" stage.
+
+Required narrative elements for this transition:
+1. Acknowledge their achievement in completing the previous stage
+2. Introduce the concept and challenges of the new stage: ${stageTransition.newStageDescription}
+3. Establish appropriate tension or excitement for this new phase
+4. Highlight how the character's growth so far prepares them for new challenges
+
+This transition should be treated as a significant narrative moment that marks clear progression in the story.
+`;
+    }
   }
   // --- End Stage Information Section ---
 
@@ -221,7 +362,15 @@ ${formattedGoals}`;
   const prompt = `ROLE: Game master for "${state.scenario}" - Create an engaging narrative that responds to player actions.
 
 LANGUAGE: ${languageInstruction} Match your tone to "${templateTitle}".
+${forceEndingRequested ? `\n*** ENDING INSTRUCTION (CRITICAL) ***\nThis is the FINAL response in this conversation. The player has requested to END THE STORY.\nYour response MUST provide a satisfying conclusion and end with "THE END".\n` : ''}
+${stageTransition ? `\n${stageTransitionText}` : ''}
+CURRENT STAGE FOCUS:
+${stageInfoText}
+=== YOUR PRIMARY NARRATIVE CONTEXT ===
+The player's experience should be strongly guided by the current stage description and goals.
+All narration, challenges, and opportunities should align with and contribute to this stage context.
 
+${gameProgressionText ? `OVERALL GAME PROGRESSION:\n${gameProgressionText}\n\n` : ''}
 GAME STATE:
 - Character: ${state.playerName}
 - Customizations: ${formattedCustomizations}
@@ -232,7 +381,6 @@ ${relationships && Object.keys(relationships).length > 0 ? `- Relationships: ${f
 - Turn: ${state.turn}
 
 ${availableNPCs !== "None defined in template." ? `AVAILABLE NPCs:\n${availableNPCs}\n` : ''}
-${stageInfoText}
 
 KEY EVENTS SO FAR:
 ${formatKeyEvents(state.history)}
@@ -249,16 +397,18 @@ GAME MECHANICS TO FOLLOW:
 1. Dice System: ${diceInstructions}
 ${diceResultsExplanation}
 2. NPC Rules: ${npcInstructions}
-3. Stage Progression: Incorporate the current stage context and goals into the narrative. Acknowledge goal progress if relevant.
+3. Stage Progression: The stage context is CRUCIAL. Your narrative MUST clearly reflect the current stage description, and explicitly acknowledge any progress toward stage goals. Connect the player's actions to their stage goals whenever possible.
 
 RESPONSE REQUIREMENTS:
-1. Narrate the outcome of the player's action based on game state, dice rolls, and stage context.
-2. Include world/NPC reactions, ensuring NPCs behave according to their descriptions and relationship levels.
-3. Provide new information, challenges, or opportunities relevant to the current stage.
-4. End with a hook or question for the player's next action.
-5. Ensure the narrative reflects the current stage context and goals.
+1. Start by acknowledging the CURRENT STAGE situation and relevant goals, stating the stage name and short concise description.
+2. Narrate the outcome of the player's action based on game state, dice rolls, and stage context.
+3. Include world/NPC reactions, ensuring NPCs behave according to their descriptions and relationship levels.
+4. Provide new information, challenges, or opportunities DIRECTLY RELEVANT to current stage goals.
+5. End with a hook or question for the player's next action that encourages progress in the current stage.
 
 IMPORTANT:
+- Always make it CRYSTAL CLEAR to the player which stage they are in and what goals they're working toward.
+- Refer to stage goals explicitly when the player makes progress or faces relevant challenges.
 - Never use [DICE_CHECK] format in your response. Request rolls narratively.
 - Always incorporate relevant NPCs from the available list if appropriate.
 - Maintain consistent tone and language (${isChinese ? 'Chinese' : 'English'}).

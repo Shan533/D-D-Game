@@ -405,11 +405,12 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       sum?: number;
       modifier?: number;
       total?: number;
-    }
+    },
+    forceEndingRequested?: boolean
   ): Promise<{ aiText: string; calculatedState: GameState }> => {
     try {
       // Build the prompt for the AI
-      const prompt = buildGamePrompt(template, state, playerAction, diceRoll);
+      const prompt = buildGamePrompt(template, state, playerAction, diceRoll, undefined, forceEndingRequested);
 
       // DEBUGGING: Log the prompt for debugging
       console.log('=== AI Prompt ===');
@@ -581,6 +582,72 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
+      // Format dice roll information for AI prompt
+      const diceRollInfo = diceRollValues ? {
+        values: diceRollValues,
+        isSpecialEvent: isSpecialEvent,
+        specialEventName: specialEvent?.name,
+        specialEventDescription: specialEvent?.description,
+        sum: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0),
+        modifier: attributeModifier,
+        attributeKey: attributeKey,
+        attributeValue: attributeValue,
+        total: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0) + attributeModifier
+      } : undefined;
+
+      // Check if the player is requesting to end the game
+      const endingRequested = checkForEndingRequest(action);
+      
+      // Debug check - manually check for the exact string "故事结束"
+      if (action === "故事结束" || action.includes("故事结束")) {
+        console.log("'故事结束' detected in action");
+      }
+      
+      // Backup pattern check for Chinese (in case the primary check fails)
+      if (!endingRequested && (
+        action.includes("结束") || 
+        action.includes("故事") || 
+        action.includes("游戏") || 
+        action.includes("完结")
+      )) {
+        // Force ending requested if we have obvious Chinese ending terms
+        const forceEnding = action.includes("故事结束") || 
+                           action.includes("结束故事") || 
+                           action.includes("游戏结束") || 
+                           action.includes("结束游戏") ||
+                           action === "完结";
+        
+        if (forceEnding) {
+          console.log("Forcing ending requested based on direct match");
+          // Override the endingRequested value
+          const { aiText, calculatedState } = await generateAIResponse(
+            template,
+            gameState,
+            action,
+            diceRollInfo,  // Use properly formatted diceRollInfo
+            true // Force ending to true
+          );
+          
+          // Process the rest as usual...
+          const { updatedState: finalState } = await stateManager.addHistoryEntry(
+            sessionId,
+            calculatedState,
+            template,
+            action,
+            aiText,
+            diceRollValues ? diceRollValues[0] : undefined
+          );
+          
+          setGameState(finalState);
+          await stateManager.saveGameState(sessionId, finalState);
+          return; // Exit early as we've handled the action
+        }
+      }
+      
+      if (endingRequested) {
+        console.log("📢 ENDING REQUEST DETECTED:", action);
+      }
+
       // Store dice result in state if we have dice values
       if (diceRollValues && diceRollValues.length > 0) {
         const diceSum = diceRollValues.reduce((sum, val) => sum + val, 0);
@@ -604,25 +671,14 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         });
       }
 
-      // Format dice roll information for AI prompt
-      const diceRollInfo = diceRollValues ? {
-        values: diceRollValues,
-        isSpecialEvent: isSpecialEvent,
-        specialEventName: specialEvent?.name,
-        specialEventDescription: specialEvent?.description,
-        sum: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0),
-        modifier: attributeModifier,
-        attributeKey: attributeKey,
-        attributeValue: attributeValue,
-        total: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0) + attributeModifier
-      } : undefined;
-
+      
       // Generate AI response with current state
       const { aiText, calculatedState } = await generateAIResponse(
         template,
         gameState,
         action,
-        diceRollInfo
+        diceRollInfo,
+        endingRequested // Pass the ending request flag
       );
 
       // Add history entry, passing the template and using the state returned by generateAIResponse
@@ -652,6 +708,42 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const clearDiceResult = (): void => {
     setDiceResult(null);
+  };
+
+  // Helper function to detect ending requests
+  const checkForEndingRequest = (action: string): boolean => {
+    const lowerAction = action.toLowerCase();
+    
+    // Simple exact match patterns (highest priority)
+    const exactMatches = ['故事结束', '结束故事', '游戏结束', '结束游戏', '完结', 
+                           'end story', 'end game', 'finish story', 'the end'];
+    
+    for (const match of exactMatches) {
+      if (lowerAction.includes(match)) {
+        return true;
+      }
+    }
+    
+    // Chinese and English patterns for requesting an ending
+    const endingPatterns = [
+      /结束(故事|游戏)|游戏结束|故事结束|完结/i,                           // Chinese patterns
+      /end (story|game)|finish (story|game)|conclude (story|game)/i,      // English patterns
+      /(story|game) (over|done|finished|concluded)/i,                     // English variations
+      /bring (the|this) (story|game) to (an|the) end/i,                   // More complex English
+      /can (we|i|you) end (the|this) (story|game)/i,                      // Question forms
+      /i('m| am) (done|finished) (with|playing) (the|this) (story|game)/i, // Player state
+      /give (me|us) (an|the) ending/i                                     // Request for ending
+    ];
+    
+    // Check if any pattern matches
+    for (let i = 0; i < endingPatterns.length; i++) {
+      const pattern = endingPatterns[i];
+      if (pattern.test(lowerAction)) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   const value: GameContextType = {
