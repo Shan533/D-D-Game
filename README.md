@@ -1,31 +1,21 @@
 # D&D-Style Interactive Game
 
-A digital D&D-style interactive storytelling game with AI-powered narrative, dice rolling mechanics, and character customization.
+An AI-powered interactive storytelling game with triple dice mechanics, character customization, and dynamic narrative progression.
 
-## Features
+## Key Features
 
-- AI-driven storytelling that responds to player choices
-- D&D-style dice rolling mechanics
-- Character customization with attributes that impact gameplay
-- Multiple game templates with unique scenarios
-- Persistent game state with save/load functionality
-- Relationship system with NPCs
+- AI-driven narrative that adapts to player choices
+- Triple dice system with special events for matching dice
+- Stage-based gameplay with goals and progression
+- Character customization affecting gameplay outcomes
+- Multiple scenario templates (idol competition, white house advisor, etc.)
+- Story conclusion system with multiple ending paths
 
 ## Tech Stack
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Supabase for authentication and data storage
 - **AI**: OpenAI API for dynamic storytelling
-- **Styling**: Custom UI components
-
-## Documentation
-
-Detailed documentation about the project is available in the [docs](/docs) directory:
-
-- [Design Document](/docs/design.md) - Project overview, architecture, and feature descriptions
-- [Database Setup](/docs/db-setup.md) - Guide for setting up the Supabase database
-- [File Structure](/docs/file_structure.md) - Overview of the codebase organization
-- [Template Structure](/src/templates/template-structure.md) - Documentation for creating game templates
 
 ## Getting Started
 
@@ -36,7 +26,7 @@ Detailed documentation about the project is available in the [docs](/docs) direc
 - Supabase account
 - OpenAI API key
 
-### Installation
+### Quick Start
 
 1. Clone the repository:
    ```
@@ -44,71 +34,46 @@ Detailed documentation about the project is available in the [docs](/docs) direc
    cd dd-game
    ```
 
-2. Install dependencies:
+2. Install dependencies and set up environment:
    ```
    npm install
+   cp .env.local.example .env.local   # Edit with your API keys
    ```
 
-3. Copy the environment variables template and fill in your values:
-   ```
-   cp .env.local.example .env.local
-   ```
-
-4. Start the development server:
+3. Start development server:
    ```
    npm run dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) with your browser to see the game.
-
-## Authentication Implementation
-
-The game uses Supabase for authentication with server-side JWT handling:
-
-- **Server Components**: Authentication in server components is handled through `@/utils/supabase/server.ts`
-- **Client Components**: Client-side authentication is handled through `@/utils/supabase/client.ts`
-- **Middleware**: Session refresh and protection is handled through `@/utils/supabase/middleware.ts`
-- **Protected Routes**: Game routes are protected with middleware redirects
-
-Following the latest Next.js 15 patterns, we use:
-- Server Actions for login/logout/signup flows
-- Cookies for session persistence
-- JWT validation for secure authentication
+4. Open [http://localhost:8000](http://localhost:8000) to play
 
 ## Game Mechanics
 
-The game uses two main mechanics:
+### Triple Dice System
+- Three dice (1-6) rolled simultaneously
+- Matching dice trigger special events
+- Non-matching dice values are summed (3-18)
+- Attribute modifiers affect success thresholds
 
-1. **Text-based Interaction**: Players type their actions and the AI responds with narrative.
-2. **Dice Rolling**: For skill checks, the game uses D20 dice rolling with modifiers based on character attributes.
+### Stage Progression
+- Multiple game stages with unique goals
+- Character attributes influence goal completion
+- Stage transitions mark story progression
 
-### Dice System
+### Story Conclusion
+- Natural completion of final stage
+- Extended gameplay endings (30+ turns)
+- Player-requested endings via keywords
 
-- Standard D20 dice mechanics
-- Critical success on natural 20
-- Critical failure on natural 1
-- Attribute modifiers affect roll results
-- Success/failure determined against difficulty class (DC)
+## Documentation
 
-### Character Attributes
+See the [docs](/docs) directory for detailed information:
 
-Characters have attributes that affect gameplay:
-- Each attribute has a value (5-15 typically)
-- Modifiers are calculated as (attribute / 5, rounded down)
-- Attributes are used in skill checks and affect outcomes
-
-## Project Structure
-
-- `/src/components`: UI components
-- `/src/context`: React context providers for auth and game state
-- `/src/lib`: Utility functions and services
-- `/src/types`: TypeScript type definitions
-- `/src/app`: Next.js App Router pages
-- `/src/utils`: Core utilities including Supabase client configuration
-- `/docs`: Project documentation
-
-For a more detailed overview of the file structure, see the [File Structure](/docs/file_structure.md) document.
+- [Design Document](/docs/design.md) - Architecture and implementation details
+- [File Structure](/docs/file_structure.md) - Codebase organization
+- [Database Setup](/docs/db-setup.md) - Supabase configuration
+- [Template Structure](/src/templates/template-structure.md) - Documentation for creating game templates
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT

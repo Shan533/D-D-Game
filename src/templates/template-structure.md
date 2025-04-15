@@ -128,7 +128,7 @@ Define distinct narrative stages with goals, conditions, and rewards:
       "attribute_bonus": {       // Attributes to increase upon completion
         "attribute1": 1
       },
-      "unlock_skills": ["skill_id"] // Skills to unlock upon completion
+      "nextStageId": "second-crisis"
     }
   }
 }
@@ -149,7 +149,6 @@ Define distinct narrative stages with goals, conditions, and rewards:
   - **min_attributes**: Minimum attribute levels required
 - **rewards**: Benefits gained upon completing this stage
   - **attribute_bonus**: Attribute increases
-  - **unlock_skills**: New skills made available to the player
 
 #### Multiple-Stage Example
 
@@ -215,7 +214,7 @@ Define distinct narrative stages with goals, conditions, and rewards:
       "attribute_bonus": {
         "influence": 2
       },
-      "unlock_skills": ["crisis_management"]
+      "nextStageId": "second-crisis"
     }
   }
 }
