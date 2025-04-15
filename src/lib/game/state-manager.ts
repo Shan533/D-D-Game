@@ -630,7 +630,7 @@ export const parseStatsChanges = (statsText: string): {
       const match = change.match(/([^+-]+)([+-])(\d+)/);
       if (match) {
         const [, attr, operator, value] = match;
-        const attributeName = attr.trim().toLowerCase().replace(/\s+/g, '_');
+        const attributeName = attr.trim();
         const changeValue = parseInt(value) * (operator === '+' ? 1 : -1);
         if (!isNaN(changeValue)) {
           changes.attributes[attributeName] = changeValue;
@@ -660,7 +660,7 @@ export const parseStatsChanges = (statsText: string): {
   const directAttributeMatch = statsText.match(/- ([^:]+)([+-])(\d+)/);
   if (directAttributeMatch) {
     const [, attr, operator, value] = directAttributeMatch;
-    const attributeName = attr.trim().toLowerCase().replace(/\s+/g, '_');
+    const attributeName = attr.trim();
     const changeValue = parseInt(value) * (operator === '+' ? 1 : -1);
     if (!isNaN(changeValue)) {
       changes.attributes[attributeName] = changeValue;

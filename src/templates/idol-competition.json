@@ -2,7 +2,7 @@
   "metadata": {
     "id": "idol-competition",
     "name": "青春有101：偶像选秀",
-    "description": "Experience the intense competition and drama of being a contestant in a popular idol selection show.",
+    "description": "Experience the intense competition and drama of being a contestant in a popular idol selection show. 从初评级到成团夜，体验舞台背后的泪水、算计与成长。",
     "imageUrl": null,
     "tags": ["entertainment", "competition", "idol"]
   },
@@ -15,7 +15,9 @@
     "唱功": "选手的唱功，情绪感染能力",
     "体能": "选手的体能，决定选手练习时的表现",
     "人气": "选手的人气，决定了选手在观众中的受欢迎程度",
-    "公司资源": "选手所在公司的资源，决定了选手在比赛中的表现力"
+    "公司资源": "选手所在公司的资源，决定了选手在比赛中的表现力",
+    "综艺感": "在真人秀环节制造话题的能力",
+    "抗压能力": "应对网络舆论和高压训练的心理素质"
   },
   "baseSkills": {
     "stage_explosion": {
@@ -31,7 +33,7 @@
     "crisis_management": {
       "name": "危机公关",
       "description": "巧妙化解负面舆论事件",
-      "attributeKey": "人气"
+      "attributeKey": "抗压能力"
     },
     "fan_interaction": {
       "name": "粉丝互动",
@@ -44,9 +46,14 @@
       "attributeKey": "公司资源"
     },
     "endurance_training": {
-      "name": "体能训练",
-      "description": "增强持久力以应对高强度训练与表演",
+      "name": "练习室训练",
+      "description": "在练习室进行高强度训练，提高舞蹈和唱功",
       "attributeKey": "体能"
+    },
+    "entertainment_skills": {
+      "name": "综艺感",
+      "description": "在衍生节目中制造话题",
+      "attributeKey": "综艺感"
     }
   },
   "playerCustomizations": {
@@ -107,6 +114,22 @@
           "舞蹈": -1
         }
       }
+    },
+    "secret_weapon": {
+      "name": "秘密武器",
+      "description": "你准备的特殊才艺",
+      "options": [
+        "戏腔",
+        "B-Box",
+        "武术",
+        "多语言rap"
+      ],
+      "impact": {
+        "戏腔": { "唱功": 2, "综艺感": 1 },
+        "B-Box": { "舞蹈": 1, "人气": 1 },
+        "武术": { "体能": 2, "颜值": -1 },
+        "多语言rap": { "人气": 2, "唱功": -1 }
+      }
     }
   },
   "npcs": {
@@ -145,6 +168,16 @@
         "name": "小透明",
         "description": "默默无闻但潜力巨大，节目中逐渐崭露头角"
       }
+    ],
+    "staff": [
+      {
+        "name": "花字组",
+        "description": "负责后期剪辑的魔鬼团队，擅长用字幕引导观众情绪"
+      },
+      {
+        "name": "选管姐姐",
+        "description": "管理选手日常的温柔大姐姐，口袋里永远装着喉糖和创可贴"
+      }
     ]
   },
   "stages": {
@@ -155,10 +188,10 @@
         {
           "id": "impress_mentors",
           "name": "获得导师认可",
-          "description": "至少获得3位导师的认可",
+          "description": "至少获得2位导师的认可",
           "requirements": {
-            "唱功": 3,
-            "舞蹈": 3
+            "唱功": 6,
+            "舞蹈": 6
           }
         },
         {
@@ -166,36 +199,35 @@
           "name": "初印象",
           "description": "在观众中建立初步印象",
           "requirements": {
-            "颜值": 2
+            "颜值": 6
           }
         }
       ],
       "completion_conditions": {
         "min_goals_completed": 1,
         "min_attributes": {
-          "唱功": 2,
-          "舞蹈": 2
+          "唱功": 3,
+          "舞蹈": 3
         }
       },
       "rewards": {
         "attribute_bonus": {
           "颜值": 1
         },
-        "unlock_skills": ["舞台爆发"],
-        "nextStageId": "group_performance"
+        "nextStageId": "first_performance"
       }
     },
-    "group_performance": {
-      "name": "分组公演",
-      "description": "与队友合作完成舞台表演",
+    "first_performance": {
+      "name": "第一次公演：团队合作",
+      "description": "与队友合作完成第一次舞台公演，需要组队完成，需要选择队友和表演曲目，结束之后需要根据观众投票公布结果，根据结果决定是否晋级",
       "goals": [
         {
           "id": "team_coordination",
           "name": "团队协作",
           "description": "与队友配合完成表演",
           "requirements": {
-            "舞蹈": 4,
-            "体能": 3
+            "舞蹈": 8,
+            "体能": 8
           }
         },
         {
@@ -203,26 +235,105 @@
           "name": "观众互动",
           "description": "在表演中与观众互动",
           "requirements": {
-            "颜值": 3,
-            "舞蹈": 3
+            "颜值": 8,
+            "人气": 8
           }
         }
       ],
       "completion_conditions": {
         "min_goals_completed": 1,
         "min_attributes": {
-          "舞蹈": 3,
-          "唱功": 3
+          "舞蹈": 6,
+          "唱功": 6
         }
       },
       "rewards": {
         "attribute_bonus": {
-          "公司资源": 1
+          "人气": 2
         },
-        "unlock_skills": ["情感共鸣"],
+        "nextStageId": "second_performance"
+      }
+    },
+
+    "second_performance": {
+      "name": "第二次公演：概念对决",
+      "description": "选择不同风格的概念曲进行对抗，舞台暗藏隐藏摄像机记录幕后故事，结束之后需要根据观众投票公布结果，根据结果决定是否晋级",
+      "goals": [
+        {
+          "id": "concept_mastery",
+          "name": "概念消化",
+          "description": "完美诠释所选曲目风格（性感/可爱/酷炫）",
+          "requirements": {
+            "舞蹈": 7,
+            "颜值": 7,
+            "综艺感": 5
+          }
+        },
+        {
+          "id": "behind_the_scenes",
+          "name": "幕后故事",
+          "description": "在隐藏摄像机环节展现真实魅力",
+          "requirements": {
+            "抗压能力": 6,
+            "综艺感": 6
+          }
+        }
+      ],
+      "completion_conditions": {
+        "min_goals_completed": 1,
+        "min_attributes": {
+          "舞蹈": 5,
+          "唱功": 5
+        }
+      },
+      "rewards": {
+        "attribute_bonus": {
+          "人气": 3,
+          "综艺感": 3
+        },
+        "nextStageId": "third_performance"
+      }
+    },
+
+    "third_performance": {
+      "name": "第三次公演:导师合作舞台",
+      "description": "导师合作舞台，需要选择导师，舞台现场设置360度环绕机位,结束之后需要根据观众投票公布结果，根据结果决定是否晋级",
+      "goals": [
+        {
+          "id": "mentor_chemistry",
+          "name": "导师默契",
+          "description": "与导师的互动产生化学反应",
+          "requirements": {
+            "颜值": 8,
+            "舞蹈": 7
+          }
+        },
+        {
+          "id": "camera_awareness",
+          "name": "镜头意识",
+          "description": "在复杂机位下保持完美角度",
+          "requirements": {
+            "综艺感": 7,
+            "体能": 6
+          }
+        }
+      ],
+      "completion_conditions": {
+        "min_goals_completed": 1,
+        "min_attributes": {
+          "唱功": 6,
+          "抗压能力": 5
+        }
+      },
+      "rewards": {
+        "attribute_bonus": {
+          "公司资源": 2,
+          "人气": 1
+        },
         "nextStageId": "final_showdown"
       }
     },
+
     "final_showdown": {
       "name": "总决赛",
       "description": "最终舞台，争夺出道位",
@@ -259,8 +370,7 @@
         "attribute_bonus": {
           "颜值": 2,
           "公司资源": 2
-        },
-        "unlock_skills": ["危机公关", "粉丝互动"]
+        }
       }
     }
   },
@@ -295,7 +405,7 @@
       }
     },
     "team_formation": {
-      "stage": "group_performance",
+      "stage": "first_performance",
       "trigger": "分组公演",
       "description": "选择队友和表演曲目，决定你的定位",
       "choices": [
@@ -326,23 +436,57 @@
           "颜值": -1
         }
       }
+    },
+    "cp_controversy": {
+      "stage": "second_performance",
+      "trigger": "CP炒作",
+      "description": "节目组有意将你与某选手剪辑成CP，超话阅读量突破1亿",
+      "choices": [
+        "顺势营业",
+        "澄清关系",
+        "装傻充愣",
+        "反向操作"
+      ],
+      "outcomes": {
+        "顺势营业": { "人气": 3, "抗压能力": -2 },
+        "澄清关系": { "公司资源": -1, "综艺感": 1 },
+        "装傻充愣": { "综艺感": 2, "颜值": -1 },
+        "反向操作": { "人气": -1, "公司资源": 2 }
+      }
+    },
+    "vocal_crisis": {
+      "stage": "third_performance",
+      "trigger": "声带结节",
+      "description": "高强度训练导致声带受损，医生建议禁声一周",
+      "choices": [
+        "强行上台",
+        "改当Rapper",
+        "卖惨博同情",
+        "求助声乐老师"
+      ],
+      "outcomes": {
+        "强行上台": { "唱功": -3, "人气": 2 },
+        "改当Rapper": { "舞蹈": 2, "唱功": -1 },
+        "卖惨博同情": { "人气": 3, "抗压能力": -2 },
+        "求助声乐老师": { "唱功": 1, "公司资源": -1 }
+      }
     }
   },
   "specialDiceEvents": {
     "1": {
       "name": "舞台事故",
-      "description": "你遇到了严重的舞台事故，影响了你的表现和信心",
+      "description": "你遇到了严重的舞台事故，如破音，摔倒，忘词等，严重影响了你的表现和信心",
       "effect": {
         "体能": -2,
-        "人气": -1
+        "人气": -4
       }
     },
     "2": {
-      "name": "设备故障",
-      "description": "你的麦克风或耳返出现问题，影响了你的表演",
+      "name": "恶魔剪辑",
+      "description": "你的某句话被剪辑成狂妄自大的模样，甚至有人认为你在霸凌选手",
       "effect": {
-        "唱功": -1,
-        "舞蹈": -1
+        "抗压能力": -2,
+        "人气": -2
       }
     },
     "3": {

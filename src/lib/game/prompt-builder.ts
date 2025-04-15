@@ -415,7 +415,7 @@ IMPORTANT:
 - Reference key events or stage goals when relevant to the story.
 
 ATTRIBUTE AND RELATIONSHIP UPDATES:
-If the action or event directly causes attribute or relationship changes, list them clearly at the very end in this exact format (use only if changes occur):
+If the action or event directly causes attribute OR relationship changes, you MUST list them clearly at the very end in this exact format. Include BOTH types of changes if they occur. Use only if changes occur:
 [STATS]
 Attribute changes: [attribute_name]+[value], [another_attribute]-[value]
 Relationship changes: [npc_name]+[value], [another_npc_name]-[value]
