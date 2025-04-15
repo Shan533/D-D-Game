@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DiceRoller, { SingleDice, TripleDice } from '@/components/game/DiceRoller';
+import { StageGoal } from '@/types/game'; // Import StageGoal type
 
 // Function to remove [STATS] blocks from AI responses
 const cleanResponse = (response: string): string => {
@@ -121,7 +122,8 @@ export default function ChatInterface() {
         clearDiceResult();
       }
       
-      await performAction(action, diceValues || undefined);
+      // Pass the selectedSkill to performAction so it can apply attribute modifiers
+      await performAction(action, diceValues || undefined, selectedSkill || undefined);
       setAction('');
       setSelectedSkill(null);
       setShowDice(false);
@@ -178,7 +180,26 @@ export default function ChatInterface() {
           <p className="font-medium text-[var(--game-text-accent)]">Game Start: {template.scenario}</p>
           <p className="mt-2 text-[var(--game-text-primary)]">{template.startingPoint}</p>
         </div>
-        
+
+        {/* Display Current Stage Information */}
+        {template.stages && gameState.currentStageId && template.stages[gameState.currentStageId] && (
+          <div className="bg-[var(--game-bg-secondary)] p-4 rounded-lg border border-[var(--game-bg-accent)] text-sm">
+            <p className="font-semibold text-[var(--game-text-primary)] mb-2">Current Stage: {template.stages[gameState.currentStageId].name}</p>
+            <p className="text-[var(--game-text-secondary)] mb-3 italic">{template.stages[gameState.currentStageId].description}</p>
+            <p className="font-medium text-[var(--game-text-primary)] mb-1">Goals:</p>
+            <ul className="list-disc list-inside space-y-1 text-[var(--game-text-secondary)]">
+              {template.stages[gameState.currentStageId].goals.map((goal: StageGoal) => { // Add type StageGoal
+                const isCompleted = gameState.completedGoals[gameState.currentStageId]?.includes(goal.id);
+                return (
+                  <li key={goal.id} className={`${isCompleted ? 'line-through text-green-600' : ''}`}>
+                    {goal.name} {isCompleted ? '(Completed)' : '(Pending)'}: {goal.description}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
         {/* AI Response with typing effect */}
         {aiResponse && (
           <div 
@@ -206,8 +227,14 @@ export default function ChatInterface() {
                   ) : (
                     <>
                       <span className="mx-2">Sum: {diceResult.sum}</span>
-                      {diceResult.modifier !== 0 && (
-                        <span>+ {diceResult.modifier} = {diceResult.total}</span>
+                      {diceResult.modifier !== 0 && diceResult.attributeKey && (
+                        <span>
+                          + <span className="text-green-500 font-medium">{diceResult.modifier}</span> 
+                          <span className="text-xs ml-1">
+                            (from {diceResult.attributeKey}: {diceResult.attributeValue})
+                          </span> 
+                          = <span className="font-bold">{diceResult.total}</span>
+                        </span>
                       )}
                       {diceResult.success !== undefined && (
                         <span className={diceResult.success ? "text-green-600 ml-2" : "text-red-600 ml-2"}>
@@ -220,6 +247,12 @@ export default function ChatInterface() {
                 {diceResult.isMatch && diceResult.specialEvent && (
                   <p className="text-sm text-[var(--game-text-secondary)] mt-1">
                     {diceResult.specialEvent.description}
+                  </p>
+                )}
+                {/* Show attribute modifier explanation */}
+                {diceResult.modifier !== 0 && !diceResult.isMatch && (
+                  <p className="text-xs text-[var(--game-text-secondary)] mt-1">
+                    Every 5 points in {diceResult.attributeKey} provides a +1 modifier to your roll.
                   </p>
                 )}
               </div>
@@ -247,6 +280,14 @@ export default function ChatInterface() {
           </div>
         )}
         
+        {/* Game Ending Message */}
+        {gameState.isGameEnded && (
+            <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 rounded-lg border border-purple-700 shadow-lg text-center">
+                <p className="text-2xl font-bold text-white mb-2">Game Over</p>
+                <p className="text-lg text-purple-100">{gameState.gameEnding || "The story concludes."}</p>
+            </div>
+        )}
+
         {/* Invisible element to scroll to */}
         <div ref={chatEndRef} />
       </div>
@@ -286,12 +327,12 @@ export default function ChatInterface() {
                   <button
                     key={skill.id}
                     onClick={() => handleSkillSelect(skill.id)}
-                    disabled={isTyping}
+                    disabled={isTyping || gameState.isGameEnded} // Disable on game end
                     className={`p-4 rounded-lg text-left transition-all duration-300 border-2 ${
                       selectedSkill === skill.id
                         ? 'bg-[var(--game-mint-light)] border-[var(--game-button-primary)] text-[var(--game-text-accent)] shadow-sm'
                         : 'bg-[var(--game-bg-secondary)] border-transparent hover:bg-[var(--game-bg-accent)] hover:border-[var(--game-divider)] text-[var(--game-text-primary)]'
-                    } ${isTyping ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    } ${(isTyping || gameState.isGameEnded) ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex justify-between items-start mb-1">
                       <p className="font-medium text-sm">{skill.name}</p>
@@ -311,7 +352,7 @@ export default function ChatInterface() {
                       id="useDice"
                       checked={showDice}
                       onChange={(e) => setShowDice(e.target.checked)}
-                      disabled={isTyping}
+                      disabled={isTyping || gameState.isGameEnded} // Disable on game end
                       className="w-5 h-5 mr-3 accent-[var(--game-button-primary)] cursor-pointer transition-all duration-200"
                     />
                     <label htmlFor="useDice" className="text-sm text-[var(--game-text-primary)] font-medium cursor-pointer">
@@ -330,6 +371,7 @@ export default function ChatInterface() {
                         onClick={() => setDiceValues(null)} 
                         size="sm" 
                         className="ml-2 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
+                        disabled={gameState.isGameEnded} // Disable on game end
                       >
                         Reset
                       </Button>
@@ -354,7 +396,7 @@ export default function ChatInterface() {
                     setSelectedSkill(null);
                     setShowDice(false);
                   }}
-                  disabled={!selectedSkill}
+                  disabled={!selectedSkill || gameState.isGameEnded} // Disable on game end
                 >
                   Clear
                 </Button>
@@ -362,7 +404,7 @@ export default function ChatInterface() {
                   type="button" 
                   className="game-button-primary flex-1 ml-2"
                   onClick={() => setShowSkillsPanel(false)}
-                  disabled={isTyping}
+                  disabled={isTyping || gameState.isGameEnded} // Disable on game end
                 >
                   {selectedSkill ? 'Apply Skill' : 'Back to Action'}
                 </Button>
@@ -376,12 +418,12 @@ export default function ChatInterface() {
                   onChange={(e) => setAction(e.target.value)}
                   placeholder={selectedSkill ? `What do you want to do with ${availableSkills.find(s => s.id === selectedSkill)?.name}?` : "What do you want to do?"}
                   className="game-input w-full border-0 shadow-none focus:ring-0"
-                  disabled={loading || isTyping}
+                  disabled={loading || isTyping || gameState.isGameEnded} // Disable on game end
                 />
                 <Button 
                   type="submit" 
                   className="game-button-primary w-full py-2" 
-                  disabled={loading || !action.trim() || isTyping}
+                  disabled={loading || !action.trim() || isTyping || gameState.isGameEnded} // Disable on game end
                 >
                   {loading ? 'Sending...' : 'Send'}
                 </Button>
@@ -438,6 +480,7 @@ export default function ChatInterface() {
                               onClick={() => setDiceValues(null)} 
                               size="sm" 
                               className="ml-2 !bg-[var(--game-bg-primary)] !text-[var(--game-mint-dark)] hover:!bg-[var(--game-card-bg)]"
+                              disabled={gameState.isGameEnded} // Disable on game end
                             >
                               Reset
                             </Button>

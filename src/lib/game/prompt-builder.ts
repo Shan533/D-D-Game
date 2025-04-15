@@ -1,4 +1,4 @@
-import { GameState, GameTemplate, GameHistoryEntry } from '../../types/game';
+import { GameState, GameTemplate, GameHistoryEntry, StageDefinition } from '../../types/game';
 
 /**
  * Builds a prompt for the AI based on the game state and player action
@@ -74,6 +74,8 @@ export const buildGamePrompt = (
         return `${category}:\n${formattedNPCs}`;
       })
       .join('\n');
+  } else {
+    availableNPCs = "None defined in template.";
   }
 
   // Format dice roll information
@@ -139,12 +141,18 @@ Three dice (1-6) are rolled simultaneously:
 
 1. Matching dice (e.g., three 4s): Triggers a special event based on the value
    - These events add unexpected twists and affect attributes
-   - Each value (1-6) triggers a different type of special event
+   - Each value (1-6) triggers a different type of special event defined in the template.
 
 2. Non-matching dice: Values summed (3-18) for skill checks
-   - Success: sum + modifier ≥ DC
-   - Failure: sum + modifier < DC
+   - Attribute modifiers: +1 bonus for every 5 points in the relevant attribute
+   - Success: sum + attribute modifier ≥ DC
+   - Failure: sum + attribute modifier < DC
    - Margin affects outcome intensity (±2: minor, ±3-5: moderate, ±6+: major)
+
+3. Attribute impact on skills:
+   - Each skill is tied to a specific attribute (e.g., 舞蹈, 颜值, 唱功, etc.)
+   - Higher attribute values make skill checks more likely to succeed
+   - Example: A 舞蹈 (Dance) skill check with 舞蹈 attribute of 12 gives +2 modifier (12 ÷ 5 = 2.4, rounded down to 2)
 
 Difficulty scale (3-18 range): Very Easy: DC 5, Easy: DC 7, Medium: DC 10, Hard: DC 13, Very Hard: DC 16
 `;
@@ -154,10 +162,10 @@ Difficulty scale (3-18 range): Very Easy: DC 5, Easy: DC 7, Medium: DC 10, Hard:
 1. Include NPCs regularly to make the world feel alive and interactive
 2. Maintain consistent NPC personalities based on their descriptions
 3. Relationship values affect NPC reactions:
-   - Very Positive (≥75): Friendly, helpful, supportive
-   - Positive (≥25): Generally cooperative
-   - Neutral (-25 to 25): Professional attitude
-   - Negative (≤-25): Unfriendly, resistant
+   - Very Positive (≥75): Close ally, loyal, may develop into romantic relationship if appropriate
+   - Positive (≥25): Friendly, helpful, may show romantic interest if appropriate
+   - Neutral (-25 to 25): Professional attitude, neither helpful nor difficult
+   - Negative (≤-25): Unfriendly, resistant, difficult to work with
    - Very Negative (≤-75): Hostile, may sabotage
 4. Show relationships through dialogue and actions, never mention numerical values
 5. Relationship changes should feel natural and justified by player actions
@@ -187,6 +195,28 @@ Difficulty scale (3-18 range): Very Easy: DC 5, Easy: DC 7, Medium: DC 10, Hard:
     }).join('\n\n');
   };
 
+  // --- Stage Information Section ---
+  let stageInfoText = "No stage information available.";
+
+  if (template.stages && state.currentStageId && template.stages[state.currentStageId]) {
+    const currentStage: StageDefinition = template.stages[state.currentStageId];
+    const completedGoalsForStage = state.completedGoals[state.currentStageId] || [];
+
+    const formattedGoals = currentStage.goals.map(goal => {
+      const isCompleted = completedGoalsForStage.includes(goal.id);
+      const requirementsText = Object.entries(goal.requirements)
+        .map(([attr, value]) => `${attr} ≥ ${value}`)
+        .join(', ');
+      return `  - ${goal.name} (${isCompleted ? 'Completed' : 'Pending'}): ${goal.description} (Requires: ${requirementsText})`;
+    }).join('\n');
+
+    stageInfoText = `Current Stage: "${currentStage.name}"
+Stage Description: ${currentStage.description}
+Stage Goals:
+${formattedGoals}`;
+  }
+  // --- End Stage Information Section ---
+
   // Build the complete prompt
   const prompt = `ROLE: Game master for "${state.scenario}" - Create an engaging narrative that responds to player actions.
 
@@ -199,44 +229,49 @@ GAME STATE:
 - Current scene: ${state.currentScene}
 ${activeSkills && Object.keys(activeSkills).length > 0 ? `- Active effects: ${formattedActiveSkills}\n` : ''}
 ${relationships && Object.keys(relationships).length > 0 ? `- Relationships: ${formattedRelationships}\n` : ''}
+- Turn: ${state.turn}
 
-${template.npcs && Object.keys(template.npcs).length > 0 ? `NPCs: ${availableNPCs}\n` : ''}
+${availableNPCs !== "None defined in template." ? `AVAILABLE NPCs:\n${availableNPCs}\n` : ''}
+${stageInfoText}
 
-KEY EVENTS: ${formatKeyEvents(state.history)}
+KEY EVENTS SO FAR:
+${formatKeyEvents(state.history)}
 
+PREVIOUS INTERACTION:
 ${previousInteractionText}
 
-PLAYER ACTION: ${playerAction}
+PLAYER ACTION (Turn ${state.turn + 1}): ${playerAction}
 
+DICE ROLL RESULTS:
 ${diceRollText}
 
-GAME MECHANICS:
+GAME MECHANICS TO FOLLOW:
 1. Dice System: ${diceInstructions}
 ${diceResultsExplanation}
-
 2. NPC Rules: ${npcInstructions}
+3. Stage Progression: Incorporate the current stage context and goals into the narrative. Acknowledge goal progress if relevant.
 
 RESPONSE REQUIREMENTS:
-1. Describe the current situation before the player's action
-2. Describe the outcome of the player's action
-3. Include NPC reactions and world interactions
-4. Provide new information or opportunities
-5. End with a hook for what might happen next
+1. Narrate the outcome of the player's action based on game state, dice rolls, and stage context.
+2. Include world/NPC reactions, ensuring NPCs behave according to their descriptions and relationship levels.
+3. Provide new information, challenges, or opportunities relevant to the current stage.
+4. End with a hook or question for the player's next action.
+5. Ensure the narrative reflects the current stage context and goals.
 
 IMPORTANT:
-- Never use [DICE_CHECK] format in your response
-- Always incorporate NPCs from the available list
-- Respond in ${isChinese ? 'Chinese' : 'English'}
-- Reference key events when relevant
+- Never use [DICE_CHECK] format in your response. Request rolls narratively.
+- Always incorporate relevant NPCs from the available list if appropriate.
+- Maintain consistent tone and language (${isChinese ? 'Chinese' : 'English'}).
+- Reference key events or stage goals when relevant to the story.
 
 ATTRIBUTE AND RELATIONSHIP UPDATES:
-End with stats changes in the format:
+If the action or event directly causes attribute or relationship changes, list them clearly at the very end in this exact format (use only if changes occur):
 [STATS]
-- Attribute changes: [attribute_name]+[value] or [attribute_name]-[value]
-- Relationship changes: [npc_name]+[value] or [npc_name]-[value]
+Attribute changes: [attribute_name]+[value], [another_attribute]-[value]
+Relationship changes: [npc_name]+[value], [another_npc_name]-[value]
 [/STATS]
 
-Keep your response engaging and dramatic. Respond with 3-4 paragraphs.`;
+Keep your response engaging, dramatic, and typically 3-4 paragraphs long.`;
 
   return prompt;
 }; 

@@ -67,7 +67,33 @@ const isSupabaseAvailable = async (): Promise<boolean> => {
 const saveToLocalStorage = (key: string, data: any) => {
   try {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(key, JSON.stringify(data));
+      // Before trying to stringify, detect and handle circular references
+      const getCircularReplacer = () => {
+        const seen = new WeakSet();
+        return (key: string, value: any) => {
+          // Skip __proto__ properties
+          if (key.startsWith('__')) return;
+          
+          // Handle non-object values normally
+          if (typeof value !== 'object' || value === null) {
+            return value;
+          }
+          
+          // Detect circular references
+          if (seen.has(value)) {
+            console.warn(`Circular reference detected when saving to localStorage at key: ${key}`);
+            // For circular references, return a simple representation instead
+            return '[Circular Reference]';
+          }
+          
+          seen.add(value);
+          return value;
+        };
+      };
+
+      // Use the circular reference-safe replacer
+      const jsonString = JSON.stringify(data, getCircularReplacer());
+      localStorage.setItem(key, jsonString);
       return true;
     }
     return false;
@@ -124,6 +150,13 @@ export const createGameState = async (
       });
     }
 
+    // Determine the starting stage ID
+    const startingStageId = template.firstStageId || (template.stages ? Object.keys(template.stages)[0] : 'start');
+    if (!startingStageId) {
+      console.warn("Could not determine a starting stage ID for the template.");
+      // Fallback to a default or handle error appropriately
+    }
+
     const newState: GameState = {
       userId,
       templateId,
@@ -134,6 +167,10 @@ export const createGameState = async (
       playerCustomizations,
       attributes: initialAttributes,
       relationships: initialRelationships,
+      currentStageId: startingStageId || 'start', // Use determined or fallback ID
+      completedGoals: {},                  // Initialize as empty
+      isGameEnded: false,                  // Initialize as false
+      gameEnding: undefined,               // Initialize as undefined
       history: []
     };
 
@@ -359,6 +396,7 @@ export const saveGameState = async (
 export const addHistoryEntry = async (
   sessionId: string,
   state: GameState,
+  template: GameTemplate,
   action: string,
   result: string,
   diceRoll?: number,
@@ -372,7 +410,7 @@ export const addHistoryEntry = async (
     relationships?: Record<string, number>;
     unlocks?: string[];
   }
-): Promise<GameState> => {
+): Promise<{ updatedState: GameState; didTransition: boolean }> => {
   try {
     if (!sessionId) {
       throw new Error('Cannot add history entry: sessionId is required');
@@ -381,47 +419,76 @@ export const addHistoryEntry = async (
     if (!state) {
       throw new Error('Cannot add history entry: gameState is required');
     }
-    
-    // Create a new entry
+
+    // 1. Apply AI suggested state changes first (if any)
+    let stateAfterAIChanges = { ...state };
+    if (stateChanges) {
+      // Assuming stateChanges contains attributes/relationships directly for now
+      // If they are nested (like from parseStatsChanges), adjust this logic
+      const parsedChanges = {
+          attributes: stateChanges.attributes || {},
+          relationships: stateChanges.relationships || {}
+      };
+      stateAfterAIChanges = applyStatsChanges(stateAfterAIChanges, parsedChanges);
+    } 
+
+    // 2. Check for stage progression *after* applying AI changes
+    const { updatedState: stateAfterProgression, didTransition } = checkStageProgression(stateAfterAIChanges, template);
+
+    // Ensure turn is incremented correctly on the final state
+    const finalState = {
+      ...stateAfterProgression,
+      turn: state.turn + 1, // Increment turn based on the original state's turn
+    };
+
+    // 3. Create history entry (using the state *before* progression check for context?)
     const newEntry: GameHistoryEntry = {
       timestamp: new Date().toISOString(),
-      turn: state.turn + 1,
+      turn: finalState.turn, // Use the incremented turn
       action,
       result,
-      diceRoll: diceRoll ? {
-        roll: diceRoll,
-        modifier: 0,
-        total: diceRoll
-      } : undefined,
-      stateChanges,
-      isKeyEvent,
+      diceRoll: stateChanges?.diceRoll, // Pass full dice info if available in stateChanges
+      // Store the state *after* AI changes but *before* progression check?
+      // Or store the final state changes including progression?
+      // Storing changes from AI + progression status for now
+      stateChanges: {
+        ...(stateChanges || {}),
+        stageTransitionOccurred: didTransition,
+        // Don't store the entire state to avoid circular references
+        // Instead, store just the relevant state changes
+        attributeChanges: { ...finalState.attributes },
+        relationshipChanges: finalState.relationships ? { ...finalState.relationships } : {},
+        currentStageId: finalState.currentStageId,
+        completedGoals: { ...finalState.completedGoals },
+        isGameEnded: finalState.isGameEnded,
+        gameEnding: finalState.gameEnding
+      },
+      isKeyEvent, // Pass through existing fields
       eventType,
       eventDescription,
       relatedNPCs,
       impact
     };
-    
-    // Add the entry to the state
-    const updatedState = {
-      ...state,
-      turn: state.turn + 1,
-      history: [...(state.history || []), newEntry],
-      ...(stateChanges || {})
-    };
+
+    // Add the entry to the final state
+    finalState.history = [...(stateAfterProgression.history || []), newEntry];
+
+    // 4. Save the final state (stateAfterProgression, with history added)
+    // ... (rest of the saving logic: localStorage or Supabase)
     
     // Save to localStorage if this was a localStorage session
-    if (state._loadedFromLocalStorage) {
+    if (finalState._loadedFromLocalStorage) {
       console.log("Adding history entry to localStorage session");
       const localSession = getFromLocalStorage(`game_session_${sessionId}`);
       
       if (localSession) {
-        localSession.game_state = updatedState;
+        localSession.game_state = finalState;
         localSession.updated_at = new Date().toISOString();
         
         saveToLocalStorage(`game_session_${sessionId}`, localSession);
         
         // Update in sessions list too
-        const gameSessionsKey = `game_sessions_${state.userId}`;
+        const gameSessionsKey = `game_sessions_${finalState.userId}`;
         const sessions = getFromLocalStorage(gameSessionsKey) || [];
         
         const updatedSessions = sessions.map((s: any) => 
@@ -430,7 +497,7 @@ export const addHistoryEntry = async (
         
         saveToLocalStorage(gameSessionsKey, updatedSessions);
         
-        return updatedState;
+        return { updatedState: finalState, didTransition }; // Return final state and transition status
       }
     }
     
@@ -440,55 +507,57 @@ export const addHistoryEntry = async (
     if (supabaseAvailable) {
       try {
         console.log("Adding history entry to Supabase session");
-        // Save history to database
+        // Save history entry separately to game_history table
         const { error: historyError } = await supabase
           .from('game_history')
           .insert({
             session_id: sessionId,
-            turn_number: state.turn + 1,
+            turn_number: finalState.turn,
             action,
             result,
-            state_changes: stateChanges || null,
+            // Adjust how state_changes are saved if needed
+            state_changes: newEntry.stateChanges || null, 
             is_key_event: isKeyEvent || false,
             event_type: eventType || null,
             event_description: eventDescription || null,
             related_npcs: relatedNPCs || null,
-            impact: impact || null
+            impact: impact || null,
+            // Save dice info if available
+            dice_roll: stateChanges?.diceRoll || null 
           });
         
         if (historyError) {
           console.error("Error adding history entry:", historyError);
-          // Continue anyway - this is not critical
+          // Decide if this should prevent state update
         }
         
-        // Update the game state
+        // Update the full game state in game_sessions table
         const { error: updateError } = await supabase
           .from('game_sessions')
           .update({
-            game_state: updatedState as any,
+            game_state: finalState as any, // Save the final state including new history
             updated_at: new Date()
           })
           .eq('id', sessionId);
         
         if (updateError) {
           console.error("Error updating game state:", updateError);
-          // Continue anyway - we'll return the updated state even if save failed
+          // Maybe throw error here?
         }
       } catch (dbError) {
         console.error("Database error when adding history entry:", dbError);
-        // Continue anyway
+        // Decide how to handle this
       }
     } else {
-      console.warn("Supabase not available - history entry only updated in memory");
+      console.warn("Supabase not available - history entry only updated in memory and localStorage (if applicable)");
     }
     
-    return updatedState;
+    return { updatedState: finalState, didTransition }; // Return final state and transition status
   } catch (error) {
     console.error("Error in addHistoryEntry:", error);
     
-    // Just return the state without adding history in case of error
-    // This ensures the game can continue even if history fails
-    return state;
+    // Return original state and no transition in case of error
+    return { updatedState: state, didTransition: false };
   }
 };
 
@@ -601,6 +670,119 @@ export const parseStatsChanges = (statsText: string): {
   return changes;
 };
 
+// --- Stage Progression Logic ---
+
+/**
+ * Checks if the player meets the conditions to progress to the next stage.
+ * Updates completed goals, applies rewards, and transitions the stage if conditions are met.
+ * Also handles game end conditions (success or failure).
+ * 
+ * @param state The current game state.
+ * @param template The game template.
+ * @returns An object containing the potentially updated game state and a flag indicating if a stage transition occurred.
+ */
+export const checkStageProgression = (
+  state: GameState,
+  template: GameTemplate
+): { updatedState: GameState; didTransition: boolean } => {
+  if (state.isGameEnded || !template.stages || !state.currentStageId || !template.stages[state.currentStageId]) {
+    // Game already ended or no stages defined/found
+    return { updatedState: state, didTransition: false };
+  }
+
+  const currentStage = template.stages[state.currentStageId];
+  let updatedState = { ...state };
+  let didTransition = false;
+
+  // 1. Check for newly completed goals in the current stage
+  const currentCompletedGoals = updatedState.completedGoals[updatedState.currentStageId] || [];
+  let newGoalsCompleted = false;
+  currentStage.goals.forEach(goal => {
+    if (!currentCompletedGoals.includes(goal.id)) {
+      // Check if requirements are met
+      const requirementsMet = Object.entries(goal.requirements).every(([attr, minValue]) => {
+        return (updatedState.attributes[attr] || 0) >= minValue;
+      });
+
+      if (requirementsMet) {
+        if (!updatedState.completedGoals[updatedState.currentStageId]) {
+          updatedState.completedGoals[updatedState.currentStageId] = [];
+        }
+        updatedState.completedGoals[updatedState.currentStageId].push(goal.id);
+        currentCompletedGoals.push(goal.id); // Update local copy for condition checks
+        newGoalsCompleted = true;
+        console.log(`Goal completed: ${goal.name} in stage ${currentStage.name}`);
+      }
+    }
+  });
+
+  // Ensure completedGoals is a new object if modified
+  if (newGoalsCompleted) {
+    updatedState = { ...updatedState, completedGoals: { ...updatedState.completedGoals } };
+  }
+
+  // 2. Check stage completion conditions
+  const conditions = currentStage.completion_conditions;
+  let stageCompleted = true;
+
+  if (conditions.min_goals_completed && currentCompletedGoals.length < conditions.min_goals_completed) {
+    stageCompleted = false;
+  }
+  if (conditions.min_attributes) {
+    if (!Object.entries(conditions.min_attributes).every(([attr, minValue]) => (updatedState.attributes[attr] || 0) >= minValue)) {
+      stageCompleted = false;
+    }
+  }
+
+  // --- Add Failure Condition Check (Example: Low 人气 in Idol Competition) ---
+  // This needs to be more generic or template-driven in a real implementation
+  if (template.metadata?.id === 'idol-competition' && (updatedState.attributes['人气'] || 0) < 0 && updatedState.turn > 5) { // Example condition
+     console.log("Game ended due to low popularity.");
+     updatedState.isGameEnded = true;
+     updatedState.gameEnding = "由于人气过低，你遗憾地被淘汰了。Your journey ends here due to low popularity.";
+     // Ensure state object is new
+     return { updatedState: { ...updatedState }, didTransition: false };
+  }
+  // --- End Failure Condition Check ---
+
+  // 3. Process Stage Completion
+  if (stageCompleted) {
+    console.log(`Stage completed: ${currentStage.name}`);
+    didTransition = true;
+
+    // Apply rewards
+    if (currentStage.rewards.attribute_bonus) {
+      Object.entries(currentStage.rewards.attribute_bonus).forEach(([attr, bonus]) => {
+        updatedState.attributes[attr] = (updatedState.attributes[attr] || 0) + bonus;
+      });
+    }
+    if (currentStage.rewards.unlock_skills) {
+      // Assuming skills are managed elsewhere or added to a list
+      console.log("Unlocked skills:", currentStage.rewards.unlock_skills); 
+      // Placeholder: Add logic to handle skill unlocks if applicable
+    }
+    // Ensure attributes object is new
+    updatedState = { ...updatedState, attributes: { ...updatedState.attributes } };
+
+    // Transition to next stage or end game
+    if (currentStage.nextStageId && template.stages[currentStage.nextStageId]) {
+      console.log(`Transitioning to stage: ${currentStage.nextStageId}`);
+      updatedState.currentStageId = currentStage.nextStageId;
+    } else {
+      // No next stage, game ends successfully
+      console.log("Final stage completed. Game Won!");
+      updatedState.isGameEnded = true;
+      updatedState.gameEnding = template.metadata?.id === 'idol-competition' 
+        ? "恭喜！你成功出道，成为了万众瞩目的新星！Congratulations! You successfully debuted and became a star!"
+        : "You have successfully completed the scenario!"; // Default ending
+    }
+  }
+
+  return { updatedState, didTransition };
+};
+
+// --- End Stage Progression Logic ---
+
 /**
  * Applies the parsed stats changes to the game state
  * @param state The current game state
@@ -618,20 +800,29 @@ export const applyStatsChanges = (
 
   // Apply attribute changes
   Object.entries(changes.attributes).forEach(([attr, value]) => {
+    // Ensure attribute exists in template before applying change?
+    // For now, allow adding new attributes implicitly if needed
     const currentValue = updatedState.attributes[attr] || 0;
-    updatedState = updateAttribute(updatedState, attr, currentValue + value);
+    // updatedState = updateAttribute(updatedState, attr, currentValue + value); // Use direct update for efficiency here
+    updatedState.attributes[attr] = currentValue + value;
   });
 
   // Apply relationship changes
   Object.entries(changes.relationships).forEach(([npc, value]) => {
+    // Ensure NPC exists before applying change? 
     const currentValue = updatedState.relationships?.[npc] || 0;
-    updatedState = updateRelationship(updatedState, npc, value);
+    // updatedState = updateRelationship(updatedState, npc, value); // Use direct update
+    const newValue = Math.max(-100, Math.min(100, currentValue + value));
+    if (!updatedState.relationships) {
+        updatedState.relationships = {};
+    }
+    updatedState.relationships[npc] = newValue;
   });
 
   // Create new objects to ensure React detects the changes
   return {
     ...updatedState,
     attributes: { ...updatedState.attributes },
-    relationships: { ...updatedState.relationships }
+    relationships: { ...(updatedState.relationships || {}) }
   };
 }; 

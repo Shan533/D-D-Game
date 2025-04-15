@@ -57,12 +57,47 @@ export interface RelationshipSystem {
   }>;
 }
 
+// Define the structure for a single goal within a stage
+export interface StageGoal {
+  id: string;
+  name: string;
+  description: string;
+  requirements: Record<string, number>; // Attribute key -> minimum value
+}
+
+// Define the structure for a single stage
+export interface StageDefinition {
+  name: string;
+  description: string;
+  goals: StageGoal[];
+  completion_conditions: {
+    min_goals_completed?: number;
+    min_attributes?: Record<string, number>; // Attribute key -> minimum value
+  };
+  rewards: {
+    attribute_bonus?: Record<string, number>; // Attribute key -> bonus value
+    unlock_skills?: string[]; // Array of skill keys to unlock
+  };
+  nextStageId?: string; // ID of the next stage, if any
+}
+
 export interface GameTemplate {
+  metadata: {
+    id: string;
+    name: string;
+    description: string;
+    imageUrl?: string;
+    tags?: string[];
+    estimatedDuration?: string;
+    difficulty?: string;
+  };
   scenario: string;
   attributes: Record<string, string>;
   baseSkills: Record<string, SkillDefinition>;
   playerCustomizations: Record<string, Customization>;
   startingPoint: string;
+  firstStageId?: string; // ID of the first stage
+  stages?: Record<string, StageDefinition>; // Map of stage ID to stage definition
   npcs?: Record<string, NPC[]>;
   events?: Record<string, GameEvent>;
   specialSkills?: Record<string, SpecialSkill>;
@@ -108,6 +143,10 @@ export interface GameState {
   playerName: string;
   playerCustomizations: Record<string, string>;
   attributes: Record<string, number>;
+  currentStageId: string;                     // Current stage ID
+  completedGoals: Record<string, string[]>;   // Stage ID -> Array of completed Goal IDs
+  isGameEnded?: boolean;                       // Flag indicating if the game has ended
+  gameEnding?: string;                         // Optional description of the game ending
   relationships?: Record<string, number>;
   activeSpecialSkills?: Record<string, {
     remainingTurns: number;

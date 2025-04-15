@@ -8,6 +8,7 @@
   },
   "scenario": "青春有101：偶像选秀",
   "startingPoint": "你站在《青春有101》初舞台的候场区，PD正在念你的名字。镜头的反光刺得你睁不开眼，耳边传来其他选手的窃窃私语。",
+  "firstStageId": "initial_audition",
   "attributes": {
     "颜值": "选手的颜值，决定了选手在镜头前的表现力",
     "舞蹈": "选手的舞蹈能力，决定了选手在舞台上的表现力",
@@ -180,7 +181,8 @@
         "attribute_bonus": {
           "颜值": 1
         },
-        "unlock_skills": ["舞台爆发"]
+        "unlock_skills": ["舞台爆发"],
+        "nextStageId": "group_performance"
       }
     },
     "group_performance": {
@@ -217,7 +219,8 @@
         "attribute_bonus": {
           "公司资源": 1
         },
-        "unlock_skills": ["情感共鸣"]
+        "unlock_skills": ["情感共鸣"],
+        "nextStageId": "final_showdown"
       }
     },
     "final_showdown": {

@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GameState, GameTemplate } from '../types/game';
-import { Template } from '../types/template';
 import * as stateManager from '../lib/game/state-manager';
 import * as templateLoader from '../lib/game/template-loader';
 import { rollTripleDice, calculateDiceSum, calculateTotal, checkTripleMatch, getSpecialEventDescription, getSpecialEventEffects } from '../lib/game/dice';
@@ -17,7 +16,7 @@ interface GameContextType {
   loading: boolean;
   error: string | null;
   gameState: GameState | null;
-  template: Template | null;
+  template: GameTemplate | null;
   sessionId: string | null;
   aiResponse: string | null;
   diceResult: {
@@ -27,6 +26,8 @@ interface GameContextType {
     sum: number;
     modifier: number;
     total: number;
+    attributeKey?: string;
+    attributeValue?: number;
     specialEvent?: {
       name: string;
       description: string;
@@ -36,8 +37,8 @@ interface GameContextType {
   } | null;
 
   // Template operations
-  loadTemplates: () => Promise<Template[]>;
-  loadTemplate: (templateId: string) => Promise<Template>;
+  loadTemplates: () => Promise<GameTemplate[]>;
+  loadTemplate: (templateId: string) => Promise<GameTemplate>;
 
   // Game operations
   createGame: (templateId: string, playerName: string, customizations: Record<string, string>) => Promise<void>;
@@ -46,7 +47,7 @@ interface GameContextType {
   endGame: () => Promise<void>;
 
   // Gameplay
-  performAction: (action: string, diceRollValues?: number[]) => Promise<void>;
+  performAction: (action: string, diceRollValues?: number[], selectedSkillId?: string) => Promise<void>;
   rollDiceForSkill: (skill: string) => Promise<number[]>;
   clearDiceResult: () => void;
 }
@@ -62,7 +63,7 @@ const initialContext: GameContextType = {
   diceResult: null,
 
   loadTemplates: async () => [],
-  loadTemplate: async () => ({} as Template),
+  loadTemplate: async () => ({} as GameTemplate),
   createGame: async () => {},
   loadGame: async () => {},
   saveGame: async () => {},
@@ -79,7 +80,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const [template, setTemplate] = useState<Template | null>(null);
+  const [template, setTemplate] = useState<GameTemplate | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [diceResult, setDiceResult] = useState<GameContextType['diceResult']>(null);
@@ -87,13 +88,13 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const router = useRouter();
 
-  const loadTemplates = async (): Promise<Template[]> => {
+  const loadTemplates = async (): Promise<GameTemplate[]> => {
     try {
       setLoading(true);
       setError(null);
       
       const templateMetadata = await templateLoader.loadTemplateMetadata();
-      const templates: Template[] = [];
+      const templates: GameTemplate[] = [];
       
       for (const metadata of templateMetadata) {
         const template = await templateLoader.loadTemplate(metadata.id);
@@ -109,7 +110,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const loadTemplate = async (templateId: string): Promise<Template> => {
+  const loadTemplate = async (templateId: string): Promise<GameTemplate> => {
     try {
       // Check if we already have this template loaded
       if (template && template.metadata.id === templateId) {
@@ -515,6 +516,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
       sum,
       modifier,
       total,
+      attributeKey: attributeName,
+      attributeValue: attributeValue,
     };
     
     // If we have a match, check for special events
@@ -538,7 +541,8 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
 
   const performAction = async (
     action: string,
-    diceRollValues?: number[]
+    diceRollValues?: number[],
+    selectedSkillId?: string
   ): Promise<void> => {
     if (!gameState || !template || !sessionId) {
       throw new Error('No active game');
@@ -559,16 +563,38 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         specialEvent = template.specialDiceEvents[matchedValue];
       }
 
+      // Calculate attribute modifier if a skill is selected
+      let attributeModifier = 0;
+      let attributeKey = '';
+      let attributeValue = 0;
+      
+      if (selectedSkillId && diceRollValues) {
+        const selectedSkill = template.baseSkills[selectedSkillId];
+        if (selectedSkill) {
+          attributeKey = selectedSkill.attributeKey || selectedSkill.attributeModifier || '';
+          if (attributeKey && gameState.attributes[attributeKey] !== undefined) {
+            attributeValue = gameState.attributes[attributeKey];
+            // Calculate modifier (attribute value / 5, rounded down)
+            attributeModifier = Math.floor(attributeValue / 5);
+            console.log(`Applied modifier +${attributeModifier} from ${attributeKey} (${attributeValue})`);
+          }
+        }
+      }
+
       // Store dice result in state if we have dice values
       if (diceRollValues && diceRollValues.length > 0) {
         const diceSum = diceRollValues.reduce((sum, val) => sum + val, 0);
+        const total = isSpecialEvent ? diceSum : diceSum + attributeModifier;
+        
         setDiceResult({
           values: diceRollValues,
           isMatch: isSpecialEvent || false,
           matchedValue: isSpecialEvent ? diceRollValues[0] : undefined,
           sum: diceSum,
-          modifier: 0,
-          total: diceSum,
+          modifier: attributeModifier,
+          total: total,
+          attributeKey: attributeKey,
+          attributeValue: attributeValue,
           specialEvent: isSpecialEvent && specialEvent ? {
             name: specialEvent.name,
             description: specialEvent.description,
@@ -585,8 +611,10 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         specialEventName: specialEvent?.name,
         specialEventDescription: specialEvent?.description,
         sum: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0),
-        modifier: 0,
-        total: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0)
+        modifier: attributeModifier,
+        attributeKey: attributeKey,
+        attributeValue: attributeValue,
+        total: isSpecialEvent ? undefined : diceRollValues.reduce((sum, val) => sum + val, 0) + attributeModifier
       } : undefined;
 
       // Generate AI response with current state
@@ -597,20 +625,22 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         diceRollInfo
       );
 
-      // Add history entry using the state returned by generateAIResponse
-      const stateWithHistory = await stateManager.addHistoryEntry(
+      // Add history entry, passing the template and using the state returned by generateAIResponse
+      // This now also returns the transition status, which we aren't using here directly
+      const { updatedState: finalState } = await stateManager.addHistoryEntry(
         sessionId,
         calculatedState,
+        template, // Pass the template object
         action,
         aiText,
         diceRollValues ? diceRollValues[0] : undefined
       );
 
       // Set the final state after history is added
-      setGameState(stateWithHistory);
+      setGameState(finalState);
 
       // Save the final state
-      await stateManager.saveGameState(sessionId, stateWithHistory);
+      await stateManager.saveGameState(sessionId, finalState);
 
     } catch (error) {
       console.error("Error in performAction:", error);
